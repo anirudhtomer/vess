@@ -1,62 +1,72 @@
-source("sample_size/casecontrol_util.R")
+source("sample_size/util.R")
+#first something important regarding vaccine coverage in controls
+#P(Vaccination) = P(Vaccination | Case) P(Case) + P(Vaccination | Control) (1-P(Case))
+#In general P(Case) is really low for diseases like influenza or even dengue. hardly 1-3% in the population
+#Hence overall_vaccine_coverage is almost equal to vaccine coverage in controls
 
-#all parameters are scalars
+#all parameters are scalars except anticipated_VE_othervaccines
 #coverage: coverage in overall population
 #nsims: larger value give more accurate results
-casecontrol_precision_overall_VE = function(anticipated_VE=0.8, alpha=0.05, 
-                                            overall_vaccine_coverage=0.3, 
-                                            attack_rate_unvaccinated=0.5,
-                                            confounder_adjustment_Rsquared = 0,
-                                            prob_missing_data = 0.1, 
-                                            prob_getting_swabbed_given_ili_sari = 0.5,
-                                            ili_sari_cumulative_prob=NA, 
-                                            ili_sari_incidence_rate=NA, 
-                                            study_period_length = NA, 
-                                            total_subjects=500,
-                                            nsims = 500){
-  
-  ili_sari_cumulative_prob = get_ili_sari_cumulative_prob(ili_sari_cumulative_prob, ili_sari_incidence_rate, study_period_length)
-  
-  ret=data.frame(anticipated_VE, alpha, overall_vaccine_coverage, attack_rate_unvaccinated,
-                 confounder_adjustment_Rsquared, prob_missing_data, prob_getting_swabbed_given_ili_sari,
-                 ili_sari_cumulative_prob, ili_sari_incidence_rate, study_period_length, total_subjects)
-  
-  ret = fill_casecontrol_VE_expected_CI_limits(ret)
-  
-  ret$catchment = ret$total_subjects / (ret$prob_getting_swabbed_given_ili_sari * ret$ili_sari_cumulative_prob)
-  return(ret)
-}
+#Important
+#we have a n x 2 table for this situation, with n-1 rows for n-1 vaccines and 1 row for unvaccinated people
+#the 2 columns are for cases and controls. our aim is to obtain a cell count for each cell
+#there is a controls:case ratio which is selected on a population level and not on vaccine level
 
-#all parameters are scalars
-#coverage: coverage in overall population
-#nsims: larger value give more accurate results
-casecontrol_precision_brand_VE = function(anticipated_VE=0.8, alpha=0.05, 
-                                          brand_proportion=0.8,
-                                          overall_vaccine_coverage=0.3, 
-                                          attack_rate_unvaccinated=0.5,
-                                          confounder_adjustment_Rsquared = 0,
-                                          prob_missing_data = 0.1, 
-                                          prob_getting_swabbed_given_ili_sari = 0.5,
-                                          ili_sari_cumulative_prob=NA, 
-                                          ili_sari_incidence_rate=NA, 
-                                          study_period_length = NA, 
-                                          total_subjects=500,
-                                          nsims = 500){
+casecontrol_precision_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.7),
+                                    overall_brand_proportions = c(30, 50, 20),
+                                    overall_vaccine_coverage=0.3, 
+                                    attack_rate_unvaccinated = 0.1,
+                                    alpha=0.05, 
+                                    controls_per_case=2,
+                                    confounder_adjustment_Rsquared = 0,
+                                    prob_missing_data = 0.1, 
+                                    prob_getting_swabbed_given_ili_sari = 0.5,
+                                    ili_sari_symptom_prob=NA, 
+                                    ili_sari_symptom_incidence_rate=NA, 
+                                    study_period_length = NA, 
+                                    total_cases=500,
+                                    nsims = 500){
   
-  ili_sari_cumulative_prob = get_ili_sari_cumulative_prob(ili_sari_cumulative_prob, ili_sari_incidence_rate, study_period_length)
+  ili_sari_symptom_prob = get_ili_sari_symptom_prob(ili_sari_symptom_prob, ili_sari_symptom_incidence_rate, study_period_length)
+  if(!sum(overall_brand_proportions, na.rm = T)==1){
+    stop("Sum of brand proportions should be equal to 1")
+  }
   
-  ret=data.frame(anticipated_VE, alpha, brand_proportion, overall_vaccine_coverage, attack_rate_unvaccinated,
-                 confounder_adjustment_Rsquared, prob_missing_data, prob_getting_swabbed_given_ili_sari,
-                 ili_sari_cumulative_prob, ili_sari_incidence_rate, study_period_length, total_subjects)
+  total_vaccines = length(anticipated_brand_VEs)
+  missing_data_adjusted_total_cases = round(total_cases * (1-prob_missing_data))
+  total_controls = missing_data_adjusted_total_cases * controls_per_case
   
-  brand_coverage = brand_proportion *overall_vaccine_coverage
-  brand_and_unvaccinated_coverage = brand_coverage + 1-overall_vaccine_coverage
-  ret$overall_vaccine_coverage = brand_coverage / brand_and_unvaccinated_coverage
-  ret$total_subjects = total_subjects * brand_and_unvaccinated_coverage  
-  ret = fill_casecontrol_VE_expected_CI_limits(ret)
-  ret$total_subjects = total_subjects
-  ret$overall_vaccine_coverage = overall_vaccine_coverage
+  brand_vaccine_coverages = overall_brand_proportions * overall_vaccine_coverage
+  cell_prob_control = c(brand_vaccine_coverages, 1-overall_vaccine_coverage)
   
-  ret$catchment = ret$total_subjects / (ret$prob_getting_swabbed_given_ili_sari * ret$ili_sari_cumulative_prob)
-  return(ret)
+  upp = matrix(ncol=total_vaccines, nrow = nsims, data = NA)
+  low = matrix(ncol=total_vaccines, nrow = nsims, data = NA)
+  
+  for(j in 1:nsims){
+    
+    #first n-1 cells are of different vaccines, the n-th cell is of unvaccinated people
+    cell_count_controls = c(rmultinom(n = 1, size = total_controls, prob = cell_prob_control))
+    
+    cell_prob_unvaccinated_case = (1 + sum(cell_count_controls[1:total_vaccines] * (1-anticipated_brand_VEs))/cell_count_controls[total_vaccines+1])^-1  
+    cell_prob_vaccinated_cases = (1-anticipated_brand_VEs) * cell_count_controls[1:total_vaccines] * cell_prob_unvaccinated_case / cell_count_controls[total_vaccines+1]
+    
+    cell_count_cases = c(rmultinom(n = 1, size = missing_data_adjusted_total_cases, prob = c(cell_prob_vaccinated_cases, cell_prob_unvaccinated_case)))
+    
+    estimates = (cell_count_cases[1:total_vaccines]/cell_count_cases[total_vaccines+1]) / (cell_count_controls[1:total_vaccines]/cell_count_controls[total_vaccines+1])
+    standard_errors = sqrt(cell_count_cases[1:total_vaccines]^-1 + cell_count_cases[total_vaccines+1]^-1 + cell_count_controls[1:total_vaccines]^-1 + cell_count_controls[total_vaccines+1]^-1)
+    confounder_adjusted_standard_errors = standard_errors / (1-confounder_adjustment_Rsquared)
+    low[j,] = exp(log(estimates) + qnorm(alpha/2) * confounder_adjusted_standard_errors)
+    upp[j,] = exp(log(estimates) + qnorm(1 - alpha/2) * confounder_adjusted_standard_errors)
+  }
+  
+  avg_lower_limit_VE = apply(1-upp, MARGIN = 2, FUN = mean, na.rm=T)
+  avg_upper_limit_VE = apply(1-low, MARGIN = 2, FUN = mean, na.rm=T)
+  
+  prob_unvaccinated_case = attack_rate_unvaccinated * (1 - overall_vaccine_coverage)
+  prob_vaccinated_case = vaccine_coverages * (1 + (1-attack_rate_unvaccinated)/((1-anticipated_brand_VEs) * attack_rate_unvaccinated))^-1
+  prob_case = sum(prob_unvaccinated_case, prob_vaccinated_case)
+  
+  catchment = total_cases / (prob_case *prob_getting_swabbed_given_ili_sari * ili_sari_symptom_prob)
+  
+  return(list(avg_lower_limit_VE=avg_lower_limit_VE, avg_upper_limit_VE=avg_upper_limit_VE, catchment=catchment))
 }
