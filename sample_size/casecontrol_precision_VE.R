@@ -14,19 +14,13 @@ source("sample_size/util.R")
 casecontrol_precision_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
                                     overall_brand_proportions = c(0.3, 0.5, 0.2),
                                     overall_vaccine_coverage=0.3, 
-                                    attack_rate_unvaccinated = 0.1,
                                     alpha=0.05, 
                                     controls_per_case=2,
                                     confounder_adjustment_Rsquared = 0,
                                     prob_missing_data = 0.1, 
-                                    prob_getting_swabbed_given_ili_sari = 0.5,
-                                    ili_sari_symptom_prob=NA, 
-                                    ili_sari_symptom_incidence_rate=NA, 
-                                    study_period_length = NA, 
                                     total_cases=500,
                                     nsims = 500){
   
-  ili_sari_symptom_prob = get_ili_sari_symptom_prob(ili_sari_symptom_prob, ili_sari_symptom_incidence_rate, study_period_length)
   if(!sum(overall_brand_proportions, na.rm = T)==1){
     stop("Sum of brand proportions should be equal to 1")
   }
@@ -62,11 +56,5 @@ casecontrol_precision_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
   avg_lower_limit_VE = apply(1-upp, MARGIN = 2, FUN = mean, na.rm=T)
   avg_upper_limit_VE = apply(1-low, MARGIN = 2, FUN = mean, na.rm=T)
   
-  prob_unvaccinated_case = attack_rate_unvaccinated * (1 - overall_vaccine_coverage)
-  prob_vaccinated_case = brand_vaccine_coverages * (1 + (1-attack_rate_unvaccinated)/((1-anticipated_brand_VEs) * attack_rate_unvaccinated))^-1
-  prob_case = sum(prob_unvaccinated_case, prob_vaccinated_case)
-  
-  catchment = total_cases / (prob_case *prob_getting_swabbed_given_ili_sari * ili_sari_symptom_prob)
-  
-  return(list(avg_lower_limit_VE=avg_lower_limit_VE, avg_upper_limit_VE=avg_upper_limit_VE, catchment=catchment))
+  return(list(avg_lower_limit_VE=avg_lower_limit_VE, avg_upper_limit_VE=avg_upper_limit_VE))
 }
