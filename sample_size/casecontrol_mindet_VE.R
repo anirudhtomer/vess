@@ -25,11 +25,11 @@ casecontrol_mindet_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
   cell_count_controls = total_controls * cell_prob_control
   cell_prob_unvaccinated_case = (1 + sum(cell_count_controls[1:total_vaccines] * (1-anticipated_brand_VEs))/cell_count_controls[total_vaccines+1])^-1  
   cell_prob_vaccinated_cases = (1-anticipated_brand_VEs) * cell_count_controls[1:total_vaccines] * cell_prob_unvaccinated_case / cell_count_controls[total_vaccines+1]
-  cell_count_cases = total_cases * c(cell_prob_vaccinated_cases, cell_prob_unvaccinated_case)
+  cell_count_cases = missing_data_adjusted_total_cases * c(cell_prob_vaccinated_cases, cell_prob_unvaccinated_case)
   
   mindet_VE = sapply(1:total_vaccines, FUN = function(vaccine_nr){
-    cases = cell_count_cases[vaccine_nr] + cell_count_cases[total_vaccines+1]
-    controls = cell_count_controls[vaccine_nr] + cell_count_controls[total_vaccines+1]
+    cases = (cell_count_cases[vaccine_nr] + cell_count_cases[total_vaccines+1]) * (1-confounder_adjustment_Rsquared)
+    controls = (cell_count_controls[vaccine_nr] + cell_count_controls[total_vaccines+1])*(1-confounder_adjustment_Rsquared)
     
     epi.sscc(OR = NA, p0 = brand_vaccine_coverages[vaccine_nr], 
              n =  controls + cases,
