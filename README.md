@@ -1,3 +1,3 @@
-# SeqirusShinyApp
+# VESS
 
-ShinyApp for Seqirus
+R package under development
