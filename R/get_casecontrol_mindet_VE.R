@@ -3,7 +3,7 @@
 #' @export
 get_casecontrol_mindet_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
                                  overall_brand_proportions = c(0.3, 0.5, 0.2),
-                                 overall_vaccine_coverage=0.3,
+                                 overall_vaccine_coverage=0.1,
                                  controls_per_case=2,
                                  calculate_for_relative_VE=T,
                                  power=0.8,
@@ -39,11 +39,12 @@ get_casecontrol_mindet_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
     cases = sum(cell_count_cases[vaccines]) * (1-confounder_adjustment_Rsquared)
     controls = sum(cell_count_controls[vaccines]) * (1-confounder_adjustment_Rsquared)
 
-    1 - epi.sscc(OR = NA, p0 = cell_prob_control[vaccines[2]],
-             n =  controls + cases,
-             power = power, r = controls/cases,
-             sided.test = 2, conf.level = 1-alpha,
-             method = "unmatched", fleiss = FALSE)$OR[1]
+    1 - epi.sscc(OR = NA,
+                 p0 = cell_prob_control[vaccines[2]] / (cell_prob_control[vaccines[2]] + cell_prob_control[vaccines[1]]) ,
+                 n =  controls + cases,
+                 power = power, r = controls/cases,
+                 sided.test = 2, conf.level = 1-alpha,
+                 method = "unmatched", fleiss = FALSE)$OR[1]
   })
 
   anticipated_brand_VEs = c(anticipated_brand_VEs, 0)
@@ -56,3 +57,4 @@ get_casecontrol_mindet_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
                    mindet_VE = mindet_VE)
   return(ret)
 }
+
