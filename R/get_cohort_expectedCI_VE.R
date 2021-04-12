@@ -29,8 +29,7 @@ get_cohort_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
   relative_risks = c(1 - anticipated_brand_VEs)
   prob_vaccinated_case = attack_rate_unvaccinated * brand_vaccine_coverages * relative_risks
   #made a dummy variable for ease of reading the code and the math
-  relative_risk_placebo = 1
-  prob_unvaccinated_case = attack_rate_unvaccinated * (1-overall_vaccine_coverage) * relative_risk_placebo
+  prob_unvaccinated_case = attack_rate_unvaccinated * (1-overall_vaccine_coverage)
   prob_vaccinated_control = brand_vaccine_coverages * (1- attack_rate_unvaccinated*relative_risks)
   prob_unvaccinated_control = (1-attack_rate_unvaccinated) * (1-overall_vaccine_coverage)
 
