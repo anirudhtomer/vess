@@ -24,13 +24,14 @@ get_casecontrol_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
 
   if(!sum(overall_brand_proportions, na.rm = T)==1){
     stop("Sum of brand proportions should be equal to 1")
+  }else if(length(anticipated_brand_VEs)!=length(overall_brand_proportions)){
+    stop("Length of anticipated brand VE should be equal to length of overall brand proportions")
   }
-
 
   total_vaccines = length(anticipated_brand_VEs)
 
   relative_VE_combn = matrix(c(1:total_vaccines, rep(total_vaccines+1, total_vaccines)), byrow = T, nrow = 2)
-  if(calculate_for_relative_VE){
+  if(calculate_for_relative_VE & total_vaccines>1){
     relative_VE_combn = cbind(combn(total_vaccines, 2), relative_VE_combn)
   }
 
