@@ -35,6 +35,7 @@ get_cohort_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
   prob_vaccinated_control = brand_vaccine_coverages * (1- attack_rate_unvaccinated*relative_risks)
   prob_unvaccinated_control = (1-attack_rate_unvaccinated) * (1-overall_vaccine_coverage)
 
+  estimate = matrix(ncol=ncol(relative_VE_combn), nrow = nsims, data = NA)
   upp = matrix(ncol=ncol(relative_VE_combn), nrow = nsims, data = NA)
   low = matrix(ncol=ncol(relative_VE_combn), nrow = nsims, data = NA)
 
@@ -46,12 +47,14 @@ get_cohort_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
                                        prob_vaccinated_control, prob_unvaccinated_control)))
     #2 x n table, row 1 for cases, row 2 for controls. nth column for unvaccinated and other columns for different vaccines
     cell_counts = matrix(cell_counts, nrow=2, byrow = T)
+    #Haldane's correction
+    cell_counts[cell_counts==0] = 0.5
 
     for(k in 1:ncol(relative_VE_combn)){
       v1index = relative_VE_combn[1, k]
       v2index = relative_VE_combn[2, k]
 
-      estimate = (cell_counts[CASE, v1index]/sum(cell_counts[, v1index])) / (cell_counts[CASE, v2index]/sum(cell_counts[, v2index]))
+      estimate[j,k] = (cell_counts[CASE, v1index]/sum(cell_counts[, v1index])) / (cell_counts[CASE, v2index]/sum(cell_counts[, v2index]))
       standard_error = sqrt(
         cell_counts[CASE, v1index]^-1 +
           cell_counts[CASE, v2index]^-1 -
@@ -59,8 +62,8 @@ get_cohort_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
           (cell_counts[CASE, v2index] + cell_counts[CONTROL, v2index])^-1
       )
       confounder_adjusted_standard_error = standard_error / (1-confounder_adjustment_Rsquared)
-      low[j,k] = exp(log(estimate) + qnorm(alpha/2) * confounder_adjusted_standard_error)
-      upp[j,k] = exp(log(estimate) + qnorm(1 - alpha/2) * confounder_adjusted_standard_error)
+      low[j,k] = exp(log(estimate[j,k]) + qnorm(alpha/2) * confounder_adjusted_standard_error)
+      upp[j,k] = exp(log(estimate[j,k]) + qnorm(1 - alpha/2) * confounder_adjusted_standard_error)
     }
   }
 
@@ -71,8 +74,11 @@ get_cohort_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
                    anticipated_VE = apply(relative_VE_combn, 2, FUN = function(x){
                      1 - (1-anticipated_brand_VEs[x[1]])/(1-anticipated_brand_VEs[x[2]])
                    }),
+                   expected_VE = apply(1-estimate, MARGIN = 2, FUN = mean, na.rm=T),
                    avg_lower_limit = apply(1-upp, MARGIN = 2, FUN = mean, na.rm=T),
                    avg_upper_limit = apply(1-low, MARGIN = 2, FUN = mean, na.rm=T))
+
+  ret$bias_VE = ret$expected_VE - ret$anticipated_VE
 
   return(ret)
 }

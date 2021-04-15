@@ -42,6 +42,7 @@ get_casecontrol_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
   #assuming that coverage in controls is same as overall coverage (see top of this file)
   cell_prob_control = c(brand_vaccine_coverages, 1-overall_vaccine_coverage)
 
+  estimate = matrix(ncol=ncol(relative_VE_combn), nrow = nsims, data = NA)
   upp = matrix(ncol=ncol(relative_VE_combn), nrow = nsims, data = NA)
   low = matrix(ncol=ncol(relative_VE_combn), nrow = nsims, data = NA)
 
@@ -49,20 +50,24 @@ get_casecontrol_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
 
     #first n-1 cells are of different vaccines, the n-th cell is of unvaccinated people
     cell_count_controls = c(rmultinom(n = 1, size = total_controls, prob = cell_prob_control))
+    #Haldane's correction
+    cell_count_controls[cell_count_controls==0] = 0.5
 
     cell_prob_unvaccinated_case = (1 + sum(cell_count_controls[1:total_vaccines] * (1-anticipated_brand_VEs))/cell_count_controls[total_vaccines+1])^-1
     cell_prob_vaccinated_cases = (1-anticipated_brand_VEs) * cell_count_controls[1:total_vaccines] * cell_prob_unvaccinated_case / cell_count_controls[total_vaccines+1]
     cell_count_cases = c(rmultinom(n = 1, size = missing_data_adjusted_total_cases, prob = c(cell_prob_vaccinated_cases, cell_prob_unvaccinated_case)))
+    #Haldane's correction
+    cell_count_cases[cell_count_cases==0] = 0.5
 
     for(k in 1:ncol(relative_VE_combn)){
       v1index = relative_VE_combn[1, k]
       v2index = relative_VE_combn[2, k]
 
-      estimate = (cell_count_cases[v1index]/cell_count_cases[v2index]) / (cell_count_controls[v1index]/cell_count_controls[v2index])
+      estimate[j,k] = (cell_count_cases[v1index]/cell_count_cases[v2index]) / (cell_count_controls[v1index]/cell_count_controls[v2index])
       standard_error = sqrt(cell_count_cases[v1index]^-1 + cell_count_cases[v2index]^-1 + cell_count_controls[v1index]^-1 + cell_count_controls[v2index]^-1)
       confounder_adjusted_standard_error = standard_error / (1-confounder_adjustment_Rsquared)
-      low[j,k] = exp(log(estimate) + qnorm(alpha/2) * confounder_adjusted_standard_error)
-      upp[j,k] = exp(log(estimate) + qnorm(1 - alpha/2) * confounder_adjusted_standard_error)
+      low[j,k] = exp(log(estimate[j,k]) + qnorm(alpha/2) * confounder_adjusted_standard_error)
+      upp[j,k] = exp(log(estimate[j,k]) + qnorm(1 - alpha/2) * confounder_adjusted_standard_error)
     }
   }
 
@@ -73,8 +78,10 @@ get_casecontrol_expectedCI_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
                    anticipated_VE = apply(relative_VE_combn, 2, FUN = function(x){
                      1 - (1-anticipated_brand_VEs[x[1]])/(1-anticipated_brand_VEs[x[2]])
                    }),
+                   expected_VE = apply(1-estimate, MARGIN = 2, FUN = mean, na.rm=T),
                    avg_lower_limit = apply(1-upp, MARGIN = 2, FUN = mean, na.rm=T),
                    avg_upper_limit = apply(1-low, MARGIN = 2, FUN = mean, na.rm=T))
 
+  ret$bias_VE = ret$expected_VE - ret$anticipated_VE
   return(ret)
 }
