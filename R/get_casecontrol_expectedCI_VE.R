@@ -68,7 +68,7 @@ get_casecontrol_expectedCI_VE = function(anticipated_VE_for_each_brand_and_strai
   prob_unvaccinated_case_each_strain = prob_case_and_unvaccinated * proportion_strains_in_unvaccinated_cases
   prob_vaccinated_case_each_strain_and_brand = t(t(odds_vaccinated_for_each_brand_and_strain * prob_vaccinated_each_brand_given_control / prob_unvaccinated_given_control) * prob_unvaccinated_case_each_strain)
 
-  full_table_cases = rbind(prob_vaccinated_case_each_strain_and_brand, prob_unvaccinated_case_each_strain)
+  full_table_cases = rbind(prob_vaccinated_case_each_strain_and_brand, 'unvaccinated'=prob_unvaccinated_case_each_strain)
 
   ##c(full_table_cases) converts the table into a vector, going column by column
   cell_counts_case_sims = array(data = do.call('cbind', lapply(missing_data_adjusted_total_cases, rmultinom, n=nsims, prob=c(full_table_cases))),
