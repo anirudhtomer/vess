@@ -39,7 +39,7 @@ get_casecontrol_mindet_VE = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
     controls = sum(cell_count_controls[vaccines]) * (1-confounder_adjustment_Rsquared)
 
     ret = try(1 - epi.sscc(OR = NA,
-                           p0 = cell_prob_control[vaccines[2]] / (cell_prob_control[vaccines[2]] + cell_prob_control[vaccines[1]]) ,
+                           p0 = cell_prob_control[vaccines[1]] / (cell_prob_control[vaccines[2]] + cell_prob_control[vaccines[1]]) ,
                            n =  controls + cases,
                            power = power, r = controls/cases,
                            sided.test = 2, conf.level = 1-alpha,
