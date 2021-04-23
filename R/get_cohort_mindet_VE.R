@@ -2,9 +2,8 @@
 #' @importFrom utils combn
 #' @export
 get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
-                                  list('brand1'=c('strain1'=0.8, 'strain2'=0.3, 'strain3'=0.9),
-                                       'brand2'=c('strain1'=0.5, 'strain2'=0.5, 'strain3'=0.5),
-                                       'brand3'=c('strain1'=0.3, 'strain2'=0.8, 'strain3'=0.1)),
+                                  matrix(data=c(0.8, 0.5, 0.3, 0.3, 0.5, 0.8, 0.9, 0.5, 1), nrow = 3, ncol = 3, byrow = F,
+                                         dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
                                 brand_proportions_in_vaccinated =
                                   c('brand1'=0.3, 'brand2'=0.5, 'brand3'=0.2),
                                 overall_vaccine_coverage=0.3,
@@ -25,8 +24,12 @@ get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
     stop("Sum of the values of the parameter 'proportion_strains_in_unvaccinated_cases' should be equal to 1")
   }
 
-  if(length(anticipated_VE_for_each_brand_and_strain)!=length(brand_proportions_in_vaccinated)){
-    stop("Length of the parameter 'anticipated_VE_for_each_brand_and_strain' should be equal to length of the parameter 'brand_proportions_in_vaccinated'")
+  if(nrow(anticipated_VE_for_each_brand_and_strain)!=length(brand_proportions_in_vaccinated)){
+    stop("Total number of rows of the parameter 'anticipated_VE_for_each_brand_and_strain' should be equal to length of the parameter 'brand_proportions_in_vaccinated'")
+  }
+
+  if(ncol(anticipated_VE_for_each_brand_and_strain)!=length(proportion_strains_in_unvaccinated_cases)){
+    stop("Total number of columns of the parameter 'anticipated_VE_for_each_brand_and_strain' should be equal to length of the parameter 'proportion_strains_in_unvaccinated_cases'")
   }
 
   total_total_subject_settings = length(total_subjects)
@@ -66,7 +69,7 @@ get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
   #sum of columns 1:total_vaccine_brands
   prob_vaccinated_with_brands = brand_proportions_in_vaccinated * overall_vaccine_coverage
 
-  relative_risk_for_each_brand_and_strain = 1 - do.call('cbind', anticipated_VE_for_each_brand_and_strain)
+  relative_risk_for_each_brand_and_strain = 1 - t(anticipated_VE_for_each_brand_and_strain)
   risk_for_each_brand_and_strain_given_unvaccinated = prob_case_each_strain_and_unvaccinated/(prob_case_each_strain_and_unvaccinated + prob_control_and_unvaccinated)
   risk_for_each_brand_and_strain_given_vaccinated = relative_risk_for_each_brand_and_strain * risk_for_each_brand_and_strain_given_unvaccinated
   odds_for_each_brand_and_strain_given_vaccinated = (risk_for_each_brand_and_strain_given_vaccinated^-1 - 1)^-1
