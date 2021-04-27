@@ -117,7 +117,6 @@ get_casecontrol_expectedCI_VE = function(anticipated_VE_for_each_brand_and_strai
                                           yes = "Unvaccinated"), total_total_case_settings),
                    strain = rep(paste("Strain", relative_VE_combn[STRAIN_ROW,]), total_total_case_settings),
                    total_cases = rep(total_cases, each=ncol(relative_VE_combn)),
-                   controls_per_case = controls_per_case,
                    anticipated_VE = anticipated_VE,
                    expected_VE = c(expected_VE),
                    bias_VE = c(expected_VE - anticipated_VE),
