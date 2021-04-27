@@ -47,7 +47,7 @@ get_casecontrol_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
     relative_VE_combn = cbind(combn(total_vaccine_brands, 2), relative_VE_combn)
   }
   relative_VE_combn = rbind(relative_VE_combn[,rep(1:ncol(relative_VE_combn), each=total_case_strains), drop=F],
-                            rep(1:total_case_strains, total_case_strains))
+                            rep(1:total_case_strains, ncol(relative_VE_combn)))
 
   #We are going to create a table with dimensions (row x columns) = (total_vaccine_brands + 1) x (total_case_strains + 1)
   #Note that this table is the transpose of what we did in the cohort study.
