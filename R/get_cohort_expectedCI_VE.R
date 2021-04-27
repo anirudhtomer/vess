@@ -116,7 +116,7 @@ get_cohort_expectedCI_VE = function(anticipated_VE_for_each_brand_and_strain=
   relative_risk_vaccine2 = relative_risk_for_each_brand_and_strain[(relative_VE_combn[2,]-1)*total_case_strains + relative_VE_combn[STRAIN_ROW,]]
   anticipated_VE = 1 - relative_risk_vaccine1/relative_risk_vaccine2
 
-  ret = data.frame(vaccine_1 = rep(paste("Vaccine", relative_VE_combn[1,]),total_total_subject_settings),
+  ret = data.frame(vaccine_1 = rep(paste("Brand", relative_VE_combn[1,]),total_total_subject_settings),
                    vaccine_2 = rep(ifelse(relative_VE_combn[2,]==total_vaccine_brands+1,
                                           no = paste("Vaccine", relative_VE_combn[2,]),
                                           yes = "Unvaccinated"), total_total_subject_settings),
