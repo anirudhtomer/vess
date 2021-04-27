@@ -81,7 +81,7 @@ get_cohort_expectedCI_VE = function(anticipated_VE_for_each_brand_and_strain=
 
   #first row is for vaccine 1, second row is for vaccine 2, third is for strain
   STRAIN_ROW = 3
-  CONTROL_ROW=ncol(full_table)
+  CONTROL_ROW=total_case_strains + 1
 
   #c(full_table) converts the table into a vector, going column by column
   cell_counts_sims = array(data = do.call('cbind', lapply(missing_data_adjusted_total_subjects, rmultinom, n=nsims, prob=c(full_table))),
