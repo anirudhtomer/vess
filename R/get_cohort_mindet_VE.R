@@ -16,79 +16,29 @@ get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
                                 prob_missing_data = 0.1,
                                 total_subjects=seq(1000, 10000, 25)){
 
-  if(!sum(brand_proportions_in_vaccinated, na.rm = T)==1){
-    stop("Sum of the values of the parameter 'brand_proportions_in_vaccinated' should be equal to 1")
-  }
+  check_input(anticipated_VE_for_each_brand_and_strain, brand_proportions_in_vaccinated, proportion_strains_in_unvaccinated_cases)
 
-  if(!sum(proportion_strains_in_unvaccinated_cases, na.rm = T)==1){
-    stop("Sum of the values of the parameter 'proportion_strains_in_unvaccinated_cases' should be equal to 1")
-  }
-
-  if(nrow(anticipated_VE_for_each_brand_and_strain)!=length(brand_proportions_in_vaccinated)){
-    stop("Total number of rows of the parameter 'anticipated_VE_for_each_brand_and_strain' should be equal to length of the parameter 'brand_proportions_in_vaccinated'")
-  }
-
-  if(ncol(anticipated_VE_for_each_brand_and_strain)!=length(proportion_strains_in_unvaccinated_cases)){
-    stop("Total number of columns of the parameter 'anticipated_VE_for_each_brand_and_strain' should be equal to length of the parameter 'proportion_strains_in_unvaccinated_cases'")
-  }
-
-  total_total_subject_settings = length(total_subjects)
-
-  #Assuming that the all subjects have the same chance of dropout due to one or another reason
-  missing_data_adjusted_total_subjects = round(total_subjects * (1-prob_missing_data))
-
-  #For each vaccine we know in what proportion are they given in the general population
   total_vaccine_brands = length(brand_proportions_in_vaccinated)
-  #For each strain we know in what proportion are they affect the total number of cases
   total_case_strains = length(proportion_strains_in_unvaccinated_cases)
 
-  relative_VE_combn = matrix(c(1:total_vaccine_brands, rep(total_vaccine_brands+1, total_vaccine_brands)), byrow = T, nrow = 2)
-  if(calculate_relative_VE & total_vaccine_brands>1){
-    relative_VE_combn = cbind(combn(total_vaccine_brands, 2), relative_VE_combn)
-  }
-  relative_VE_combn = rbind(relative_VE_combn[,rep(1:ncol(relative_VE_combn), each=total_case_strains), drop=F],
-                            rep(1:total_case_strains, ncol(relative_VE_combn)))
+  relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
-  #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
-  #The extra 1 column is for unvaccinated
-  #The extra 1 row is for controls
+  full_table = get_cohort_full_table(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+                                     proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
-  #the last column of unvaccinated is given by
-  prob_unvaccinated = 1 - overall_vaccine_coverage
-  prob_case_given_unvaccinated = overall_attack_rate_in_unvaccinated
+  total_total_subject_settings = length(total_subjects)
+  missing_data_adjusted_total_subjects = round(total_subjects * (1-prob_missing_data))
 
-  #the cell number [total_case_strains + 1, total_vaccine_brands + 1]
-  prob_control_given_unvaccinated = 1 - prob_case_given_unvaccinated
-  prob_control_and_unvaccinated = prob_control_given_unvaccinated * prob_unvaccinated
-
-  #the cell numbers [1:total_case_strains, total_vaccine_brands + 1]
-  #P(strain & case | unvaccinated) p(strain | case, unvaccinated) * p(case|unvaccinated)
-  prob_case_each_strain_given_unvaccinated = proportion_strains_in_unvaccinated_cases * prob_case_given_unvaccinated
-  prob_case_each_strain_and_unvaccinated = prob_case_each_strain_given_unvaccinated * prob_unvaccinated
-
-  #So now we are done with the last column of our table. the remaining columns are for vaccines
-  #sum of columns 1:total_vaccine_brands
-  prob_vaccinated_with_brands = brand_proportions_in_vaccinated * overall_vaccine_coverage
-
-  relative_risk_for_each_brand_and_strain = 1 - t(anticipated_VE_for_each_brand_and_strain)
-  risk_for_each_brand_and_strain_given_unvaccinated = prob_case_each_strain_and_unvaccinated/(prob_case_each_strain_and_unvaccinated + prob_control_and_unvaccinated)
-  risk_for_each_brand_and_strain_given_vaccinated = relative_risk_for_each_brand_and_strain * risk_for_each_brand_and_strain_given_unvaccinated
-  odds_for_each_brand_and_strain_given_vaccinated = (risk_for_each_brand_and_strain_given_vaccinated^-1 - 1)^-1
-  prob_control_each_brand_given_vaccinated = prob_vaccinated_with_brands / (1 + colSums(odds_for_each_brand_and_strain_given_vaccinated))
-  prob_case_each_strain_and_each_brand_given_vaccinated = t(odds_for_each_brand_and_strain_given_vaccinated) * prob_control_each_brand_given_vaccinated
-
-  full_table = cbind(rbind(t(prob_case_each_strain_and_each_brand_given_vaccinated), 'controls'=prob_control_each_brand_given_vaccinated),
-                     'unvaccinated'=c(prob_case_each_strain_and_unvaccinated, prob_control_and_unvaccinated))
-
-  coverages = c(prob_vaccinated_with_brands, 1-overall_vaccine_coverage)
   STRAIN_ROW=3
+  CONTROL_ROW=total_case_strains + 1
+
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, function(comparison_set){
     strain_index = comparison_set[STRAIN_ROW]
     vaccine1_index = comparison_set[1]
     vaccine2_index = comparison_set[2]
 
     #total_case_strains+1 is the controls row
-    sub_table = full_table[c(strain_index, total_case_strains+1), c(vaccine1_index, vaccine2_index)]
+    sub_table = full_table[c(strain_index, CONTROL_ROW), c(vaccine1_index, vaccine2_index)]
 
     vaccine1_coverage = sum(sub_table[,1])
     group_coverage = sum(sub_table)
@@ -98,10 +48,10 @@ get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
     sapply(missing_data_adjusted_total_subjects * group_coverage * (1-confounder_adjustment_Rsquared),
            function(n){
              ret = try(1 - epi.sscohortc(irexp1 = NA, irexp0 = sub_table[1, 2]/sum(sub_table[,2]),
-                               n = n,
-                               power = power,
-                               r = subpopulation_coverage/(1-subpopulation_coverage),
-                               design = 1, sided.test = 2, conf.level = 1-alpha)$irr[1], silent = T)
+                                         n = n,
+                                         power = power,
+                                         r = subpopulation_coverage/(1-subpopulation_coverage),
+                                         design = 1, sided.test = 2, conf.level = 1-alpha)$irr[1], silent = T)
              if(inherits(ret, "try-error")){
                return(NA)
              }else{

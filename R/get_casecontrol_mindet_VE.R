@@ -16,65 +16,24 @@ get_casecontrol_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
                                      prob_missing_data = 0.1,
                                      total_cases=seq(50,500, 10)){
 
-  if(!sum(brand_proportions_in_vaccinated, na.rm = T)==1){
-    stop("Sum of the values of the parameter 'brand_proportions_in_vaccinated' should be equal to 1")
-  }
+  check_input(anticipated_VE_for_each_brand_and_strain, brand_proportions_in_vaccinated, proportion_strains_in_unvaccinated_cases)
 
-  if(!sum(proportion_strains_in_unvaccinated_cases, na.rm = T)==1){
-    stop("Sum of the values of the parameter 'proportion_strains_in_unvaccinated_cases' should be equal to 1")
-  }
+  total_vaccine_brands = length(brand_proportions_in_vaccinated)
+  total_case_strains = length(proportion_strains_in_unvaccinated_cases)
 
-  if(nrow(anticipated_VE_for_each_brand_and_strain)!=length(brand_proportions_in_vaccinated)){
-    stop("Total number of rows of the parameter 'anticipated_VE_for_each_brand_and_strain' should be equal to length of the parameter 'brand_proportions_in_vaccinated'")
-  }
-
-  if(ncol(anticipated_VE_for_each_brand_and_strain)!=length(proportion_strains_in_unvaccinated_cases)){
-    stop("Total number of columns of the parameter 'anticipated_VE_for_each_brand_and_strain' should be equal to length of the parameter 'proportion_strains_in_unvaccinated_cases'")
-  }
+  relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
   total_total_case_settings = length(total_cases)
-
   missing_data_adjusted_total_cases = round(total_cases * (1-prob_missing_data))
   missing_data_adjusted_total_controls = missing_data_adjusted_total_cases * controls_per_case
 
-  #For each vaccine we know in what proportion are they given in the general population
-  total_vaccine_brands = length(brand_proportions_in_vaccinated)
-  #For each strain we know in what proportion are they affect the total number of cases
-  total_case_strains = length(proportion_strains_in_unvaccinated_cases)
-
-  relative_VE_combn = matrix(c(1:total_vaccine_brands, rep(total_vaccine_brands+1, total_vaccine_brands)), byrow = T, nrow = 2)
-  if(calculate_relative_VE & total_vaccine_brands>1){
-    relative_VE_combn = cbind(combn(total_vaccine_brands, 2), relative_VE_combn)
-  }
-  relative_VE_combn = rbind(relative_VE_combn[,rep(1:ncol(relative_VE_combn), each=total_case_strains), drop=F],
-                            rep(1:total_case_strains, ncol(relative_VE_combn)))
-
-  #We are going to create a table with dimensions (row x columns) = (total_vaccine_brands + 1) x (total_case_strains + 1)
-  #Note that this table is the transpose of what we did in the cohort study.
-  #The extra 1 column is for unvaccinated
-  #The extra 1 row is for controls
-
-  prob_vaccinated_each_brand = brand_proportions_in_vaccinated * overall_vaccine_coverage
-  #P(Vaccination) = P(Vaccination | Case) P(Case) + P(Vaccination | Control) (1-P(Case))
-  #In general P(Case) is really low for diseases like influenza or even dengue. hardly 1-3% in the population
-  #Hence overall_vaccine_coverage is almost equal to vaccine coverage in controls
-  prob_vaccinated_each_brand_given_control = prob_vaccinated_each_brand
-  prob_unvaccinated_given_control = 1 - overall_vaccine_coverage
-
   STRAIN_ROW = 3
   UNVACCINATED_ROW = total_vaccine_brands+1
-  #the idea in a case-control study is that we generate two sets of multinomial data
-  #1. for controls
-  #2. for cases
-  #the counts remain constant
 
-  odds_vaccinated_for_each_brand_and_strain = 1 - anticipated_VE_for_each_brand_and_strain
-  prob_case_and_unvaccinated = sum(proportion_strains_in_unvaccinated_cases * (1 + colSums(odds_vaccinated_for_each_brand_and_strain * prob_vaccinated_each_brand_given_control)/prob_unvaccinated_given_control))^-1
-  prob_unvaccinated_case_each_strain = prob_case_and_unvaccinated * proportion_strains_in_unvaccinated_cases
-  prob_vaccinated_case_each_strain_and_brand = t(t(odds_vaccinated_for_each_brand_and_strain * prob_vaccinated_each_brand_given_control / prob_unvaccinated_given_control) * prob_unvaccinated_case_each_strain)
+  case_control_full_tables = get_case_control_full_tables(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
+                                                          proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
-  full_table = cbind(rbind(prob_vaccinated_case_each_strain_and_brand, 'unvaccinated'=prob_unvaccinated_case_each_strain),
-                     'controls'=c(prob_vaccinated_each_brand_given_control, prob_unvaccinated_given_control))
+  full_table = cbind(case_control_full_tables$full_table_cases, case_control_full_tables$full_vector_controls)
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, FUN = function(comparison_set){
     strain_index = comparison_set[STRAIN_ROW]

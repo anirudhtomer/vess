@@ -1,3 +1,6 @@
-# VESS
+# VESS: An R package for vaccine efficacy sample size calculations.
 
-R package under development
+## Cohort studies
+
+
+
