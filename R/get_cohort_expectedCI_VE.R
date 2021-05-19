@@ -59,7 +59,7 @@ get_cohort_expectedCI_VE = function(anticipated_VE_for_each_brand_and_strain=
   avg_lower_limit = apply(X = 1-upp, MARGIN = 3, FUN = rowMeans, na.rm=T)
   avg_upper_limit = apply(X = 1-low, MARGIN = 3, FUN = rowMeans, na.rm=T)
 
-  relative_risk_for_each_brand_and_strain = cbind(1 - anticipated_VE_for_each_brand_and_strain,1)
+  relative_risk_for_each_brand_and_strain = cbind(1 - t(anticipated_VE_for_each_brand_and_strain), 1)
   relative_risk_vaccine1 = relative_risk_for_each_brand_and_strain[(relative_VE_combn[1,]-1)*total_case_strains + relative_VE_combn[STRAIN_ROW,]]
   relative_risk_vaccine2 = relative_risk_for_each_brand_and_strain[(relative_VE_combn[2,]-1)*total_case_strains + relative_VE_combn[STRAIN_ROW,]]
   anticipated_VE = 1 - relative_risk_vaccine1/relative_risk_vaccine2
