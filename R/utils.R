@@ -3,6 +3,12 @@
 #   return(round(pmax(0, stats:::predict.smooth.spline(object = fit, x = dat[,xname])$y), 2))
 # }
 
+BRAND1 = 'Brand 1'
+BRAND2 = 'Brand 2'
+STRAIN = 'Strain'
+CONTROLS = 'controls'
+UNVACCINATED = 'unvaccinated'
+
 get_ili_sari_symptom_prob=function(ili_sari_symptom_prob, ili_sari_symptom_incidence_rate, study_period_length){
   if(is.na(ili_sari_symptom_prob)){
     if(!is.na(ili_sari_symptom_incidence_rate) & !is.na(study_period_length)){
@@ -35,13 +41,15 @@ check_input = function(anticipated_VE_for_each_brand_and_strain, brand_proportio
 }
 
 get_comparison_combinations = function(total_vaccine_brands, total_case_strains, calculate_relative_VE){
-  relative_VE_combn = matrix(c(1:total_vaccine_brands, rep(total_vaccine_brands+1, total_vaccine_brands)), byrow = T, nrow = 2)
+  relative_VE_combn = matrix(c(1:total_vaccine_brands, rep(0, total_vaccine_brands)), byrow = T, nrow = 2)
   if(calculate_relative_VE & total_vaccine_brands>1){
     relative_VE_combn = cbind(combn(total_vaccine_brands, 2), relative_VE_combn)
   }
   relative_VE_combn = rbind(relative_VE_combn[,rep(1:ncol(relative_VE_combn), each=total_case_strains), drop=F],
                             rep(1:total_case_strains, ncol(relative_VE_combn)))
 
+  rownames(relative_VE_combn) = c(BRAND1, BRAND2, STRAIN)
+  colnames(relative_VE_combn) = paste('Combination' , 1:ncol(relative_VE_combn))
   return(relative_VE_combn)
 }
 
@@ -75,8 +83,8 @@ get_cohort_full_table = function(anticipated_VE_for_each_brand_and_strain, overa
   prob_control_each_brand_given_vaccinated = prob_vaccinated_with_brands / (1 + colSums(odds_for_each_brand_and_strain_given_vaccinated))
   prob_case_each_strain_and_each_brand_given_vaccinated = t(odds_for_each_brand_and_strain_given_vaccinated) * prob_control_each_brand_given_vaccinated
 
-  full_table = cbind(rbind(t(prob_case_each_strain_and_each_brand_given_vaccinated), 'controls'=prob_control_each_brand_given_vaccinated),
-                     'unvaccinated'=c(prob_case_each_strain_and_unvaccinated, prob_control_and_unvaccinated))
+  full_table = cbind('unvaccinated'=c('controls'=prob_control_and_unvaccinated, prob_case_each_strain_and_unvaccinated),
+                     rbind('controls'=prob_control_each_brand_given_vaccinated, t(prob_case_each_strain_and_each_brand_given_vaccinated)))
 
   return(full_table)
 }
@@ -101,9 +109,7 @@ get_case_control_full_tables = function(anticipated_VE_for_each_brand_and_strain
   prob_unvaccinated_case_each_strain = prob_case_and_unvaccinated * proportion_strains_in_unvaccinated_cases
   prob_vaccinated_case_each_strain_and_brand = t(t(odds_vaccinated_for_each_brand_and_strain * prob_vaccinated_each_brand_given_control / prob_unvaccinated_given_control) * prob_unvaccinated_case_each_strain)
 
-  full_table_cases = rbind(prob_vaccinated_case_each_strain_and_brand, 'unvaccinated'=prob_unvaccinated_case_each_strain)
-
-  return(list(full_table_cases=full_table_cases,
-              full_vector_controls = c(prob_vaccinated_each_brand_given_control, prob_unvaccinated_given_control)))
+  return(list(full_table_cases=rbind('unvaccinated'=prob_unvaccinated_case_each_strain, prob_vaccinated_case_each_strain_and_brand),
+              full_vector_controls = c('unvaccinated'=prob_unvaccinated_given_control, prob_vaccinated_each_brand_given_control)))
 }
 
