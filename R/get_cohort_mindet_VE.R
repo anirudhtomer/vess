@@ -29,16 +29,11 @@ get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
   total_total_subject_settings = length(total_subjects)
   missing_data_adjusted_total_subjects = round(total_subjects * (1-prob_missing_data))
 
-  STRAIN_ROW=3
-  CONTROL_ROW=total_case_strains + 1
+  CONTROL_ROW = 1
+  UNVACCINATED_COL = 1
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, function(comparison_set){
-    strain_index = comparison_set[STRAIN_ROW]
-    vaccine1_index = comparison_set[1]
-    vaccine2_index = comparison_set[2]
-
-    #total_case_strains+1 is the controls row
-    sub_table = full_table[c(strain_index, CONTROL_ROW), c(vaccine1_index, vaccine2_index)]
+    sub_table = full_table[c(0, comparison_set[STRAIN]) + CONTROL_ROW, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
 
     vaccine1_coverage = sum(sub_table[,1])
     group_coverage = sum(sub_table)
@@ -47,7 +42,7 @@ get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
     #the 'n' parameter need not be integer for this API.
     sapply(missing_data_adjusted_total_subjects * group_coverage * (1-confounder_adjustment_Rsquared),
            function(n){
-             ret = try(1 - epi.sscohortc(irexp1 = NA, irexp0 = sub_table[1, 2]/sum(sub_table[,2]),
+             ret = try(1 - epi.sscohortc(irexp1 = NA, irexp0 = sub_table[2, 2]/sum(sub_table[,2]),
                                          n = n,
                                          power = power,
                                          r = subpopulation_coverage/(1-subpopulation_coverage),
@@ -60,11 +55,11 @@ get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
            })
   }))
 
-  ret = data.frame(vaccine_1 = rep(paste("Brand", relative_VE_combn[1,]),total_total_subject_settings),
-                   vaccine_2 = rep(ifelse(relative_VE_combn[2,]==total_vaccine_brands+1,
-                                          no = paste("Brand", relative_VE_combn[2,]),
+  ret = data.frame(vaccine_1 = rep(paste("Brand", relative_VE_combn[BRAND1,]),total_total_subject_settings),
+                   vaccine_2 = rep(ifelse(relative_VE_combn[BRAND2,]==total_vaccine_brands+1,
+                                          no = paste("Brand", relative_VE_combn[BRAND2,]),
                                           yes = "Unvaccinated"), total_total_subject_settings),
-                   strain = rep(paste("Strain", relative_VE_combn[STRAIN_ROW,]), total_total_subject_settings),
+                   strain = rep(paste("Strain", relative_VE_combn[STRAIN,]), total_total_subject_settings),
                    total_subjects = rep(total_subjects, each=ncol(relative_VE_combn)),
                    mindet_VE = c(mindet_VE))
   return(ret)
