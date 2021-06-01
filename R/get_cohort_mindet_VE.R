@@ -56,7 +56,7 @@ get_cohort_mindet_VE = function(anticipated_VE_for_each_brand_and_strain=
   }))
 
   ret = data.frame(vaccine_1 = rep(paste("Brand", relative_VE_combn[BRAND1,]),total_total_subject_settings),
-                   vaccine_2 = rep(ifelse(relative_VE_combn[BRAND2,]==total_vaccine_brands+1,
+                   vaccine_2 = rep(ifelse(relative_VE_combn[BRAND2,]==0,
                                           no = paste("Brand", relative_VE_combn[BRAND2,]),
                                           yes = "Unvaccinated"), total_total_subject_settings),
                    strain = rep(paste("Strain", relative_VE_combn[STRAIN,]), total_total_subject_settings),
