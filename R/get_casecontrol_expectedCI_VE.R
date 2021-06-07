@@ -90,7 +90,7 @@ get_casecontrol_expectedCI_VE = function(anticipated_VE_for_each_brand_and_strai
                    overall_vaccine_coverage = overall_vaccine_coverage,
                    vaccine_1_prop = rep(brand_proportions_in_vaccinated[relative_VE_combn[BRAND1,]], total_total_case_settings),
                    vaccine_2_prop = rep(ifelse(relative_VE_combn[BRAND2,]==0,
-                                               no = relative_VE_combn[BRAND2,],
+                                               no = brand_proportions_in_vaccinated[relative_VE_combn[BRAND2,]],
                                                yes = NA), total_total_case_settings),
                    strain_prop = rep(proportion_strains_in_unvaccinated_cases[relative_VE_combn[STRAIN,]], total_total_case_settings),
                    controls_per_case = controls_per_case,
