@@ -9,6 +9,16 @@ STRAIN = 'Strain'
 CONTROLS = 'controls'
 UNVACCINATED = 'unvaccinated'
 
+# itexp <- function(u, rate, t) { -log(1-u*(1-exp(-t*rate)))/rate }
+# rtexp <- function(n, rate, t) { itexp(runif(n), rate, t) }
+# mean_t = function(rate, t){
+#   #change of parameterization
+#   rate = 1/rate
+#   k = t/rate
+#   return(rate * ((1 - (k+1)*exp(-k))/(1-exp(-k))))
+# }
+
+
 get_ili_sari_symptom_prob=function(ili_sari_symptom_prob, ili_sari_symptom_incidence_rate, study_period_length){
   if(is.na(ili_sari_symptom_prob)){
     if(!is.na(ili_sari_symptom_incidence_rate) & !is.na(study_period_length)){
