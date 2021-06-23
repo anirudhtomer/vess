@@ -1,25 +1,5 @@
-get_cohort_full_table_irr = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
-                                     overall_attack_rate_in_unvaccinated, study_period,
-                                     proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
-  #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
-  #The extra 1 column is for unvaccinated
-  #The extra 1 row is for controls
-
-  #the last column of unvaccinated is given by
-  prob_unvaccinated = 1 - overall_vaccine_coverage
-  prob_vaccinated_with_brands = brand_proportions_in_vaccinated * overall_vaccine_coverage
-
-  incidence_rate_unvaccinated =  - log(1 - overall_attack_rate_in_unvaccinated) / study_period
-  incidence_rate_vaccinated  = (1 - anticipated_VE_for_each_brand_and_strain) * incidence_rate_unvaccinated
-
-  full_table = cbind('unvaccinated'=c('p'=prob_unvaccinated, 'strain1'=incidence_rate_unvaccinated),
-                     rbind('p'=prob_vaccinated_with_brands, t(incidence_rate_vaccinated)))
-
-  full_table = rbind(full_table, 1 - exp(-full_table[2,] * study_period))
-
-  return(full_table)
-}
-
+#' @importFrom utils combn
+#' @export
 get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
                                           matrix(data=c(0.7, 0.4, 0.1),
                                                  nrow = 3, ncol = 1,
@@ -96,6 +76,8 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
       )
     ), dim = c((1+total_vaccine_brands)*3, nsims, total_total_subject_settings)
   )
+
+  cell_counts_sims[cell_counts_sims==0] = 0.5
 
   UNVACCINATED_EVENTS_ROW = 1
   UNVACCINATED_PERSON_TIME_ROW = (1+total_vaccine_brands) * 2 + UNVACCINATED_EVENTS_ROW

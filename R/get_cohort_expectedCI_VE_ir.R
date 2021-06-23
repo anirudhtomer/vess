@@ -1,19 +1,19 @@
 #' @importFrom utils combn
 #' @export
-get_cohort_expectedCI_VE = function(anticipated_VE_for_each_brand_and_strain=
-                                      matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9), nrow = 3, ncol = 3, byrow = T,
-                                             dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
-                                    brand_proportions_in_vaccinated =
-                                      c('brand1'=0.3, 'brand2'=0.5, 'brand3'=0.2),
-                                    overall_vaccine_coverage=0.3,
-                                    proportion_strains_in_unvaccinated_cases = c('strain1'=0.6, 'strain2'=0.3, 'strain3'=0.1),
-                                    overall_attack_rate_in_unvaccinated = 0.1,
-                                    calculate_relative_VE = T,
-                                    alpha=0.05,
-                                    confounder_adjustment_Rsquared = 0,
-                                    prob_missing_data = 0.1,
-                                    total_subjects=seq(1000, 10000, 25),
-                                    nsims = 500){
+get_cohort_expectedCI_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
+                                         matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9), nrow = 3, ncol = 3, byrow = T,
+                                                dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
+                                       brand_proportions_in_vaccinated =
+                                         c('brand1'=0.3, 'brand2'=0.5, 'brand3'=0.2),
+                                       overall_vaccine_coverage=0.3,
+                                       proportion_strains_in_unvaccinated_cases = c('strain1'=0.6, 'strain2'=0.3, 'strain3'=0.1),
+                                       overall_attack_rate_in_unvaccinated = 0.1,
+                                       calculate_relative_VE = T,
+                                       alpha=0.05,
+                                       confounder_adjustment_Rsquared = 0,
+                                       prob_missing_data = 0.1,
+                                       total_subjects=seq(1000, 10000, 25),
+                                       nsims = 500){
 
   check_input(anticipated_VE_for_each_brand_and_strain, brand_proportions_in_vaccinated, proportion_strains_in_unvaccinated_cases)
 
@@ -22,7 +22,7 @@ get_cohort_expectedCI_VE = function(anticipated_VE_for_each_brand_and_strain=
 
   relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
-  full_table = get_cohort_full_table(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+  full_table = get_cohort_full_table_ir(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
                                      proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
   #c(full_table) converts the table into a vector, going column by column

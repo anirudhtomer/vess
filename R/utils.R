@@ -63,7 +63,8 @@ get_comparison_combinations = function(total_vaccine_brands, total_case_strains,
   return(relative_VE_combn)
 }
 
-get_cohort_full_table = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+#ir is incidence risk
+get_cohort_full_table_ir = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
                                  proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
   #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
   #The extra 1 column is for unvaccinated
@@ -99,6 +100,28 @@ get_cohort_full_table = function(anticipated_VE_for_each_brand_and_strain, overa
   return(full_table)
 }
 
+#irr is incidence rate ratio
+get_cohort_full_table_irr = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
+                                     overall_attack_rate_in_unvaccinated, study_period,
+                                     proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
+  #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
+  #The extra 1 column is for unvaccinated
+  #The extra 1 row is for controls
+
+  #the last column of unvaccinated is given by
+  prob_unvaccinated = 1 - overall_vaccine_coverage
+  prob_vaccinated_with_brands = brand_proportions_in_vaccinated * overall_vaccine_coverage
+
+  incidence_rate_unvaccinated =  - log(1 - overall_attack_rate_in_unvaccinated) / study_period
+  incidence_rate_vaccinated  = (1 - anticipated_VE_for_each_brand_and_strain) * incidence_rate_unvaccinated
+
+  full_table = cbind('unvaccinated'=c('brand_prop'=prob_unvaccinated, 'strain1'=incidence_rate_unvaccinated),
+                     rbind('brand_prop'=prob_vaccinated_with_brands, t(incidence_rate_vaccinated)))
+
+  full_table = rbind(full_table, 'cum_risk_study_period' = 1 - exp(-full_table[2,] * study_period))
+
+  return(full_table)
+}
 
 get_case_control_full_tables = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
                                        proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
