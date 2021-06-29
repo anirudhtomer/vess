@@ -1,5 +1,5 @@
 #' @export
-get_casecontrol_catchment_ir = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
+get_casecontrol_catchment_or = function(anticipated_brand_VEs=c(0.8, 0.5, 0.3),
                                         overall_brand_proportions = c(0.3, 0.5, 0.2),
                                         overall_vaccine_coverage=0.3,
                                         overall_attack_rate_in_unvaccinated = 0.1,

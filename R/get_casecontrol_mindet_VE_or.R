@@ -1,7 +1,7 @@
 #' @importFrom epiR epi.sscc
 #' @importFrom utils combn
 #' @export
-get_casecontrol_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
+get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain=
                                           matrix(data=c(0.8, 0.5, 0.3, 0.3, 0.5, 0.8, 0.9, 0.5, 1), nrow = 3, ncol = 3, byrow = F,
                                                  dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
                                         brand_proportions_in_vaccinated =
