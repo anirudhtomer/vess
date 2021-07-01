@@ -45,7 +45,7 @@ get_cohort_mindet_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
     #the 'n' parameter need not be integer for this API.
     sapply(missing_data_adjusted_total_subjects * group_coverage * (1-confounder_adjustment_Rsquared),
            function(n){
-             ret = try(1 - epi.sscohortt(irexp1 = NA, irexp0 = sub_table[2,1],
+             ret = try(1 - epi.sscohortt(irexp1 = NA, irexp0 = sub_table[2,2],
                                          FT = study_period, n = n, power = power,
                                          r = subpopulation_coverage/(1-subpopulation_coverage),
                                          design = 1, sided.test = 2, conf.level = 1-alpha

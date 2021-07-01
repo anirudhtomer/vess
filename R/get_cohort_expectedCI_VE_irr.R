@@ -53,12 +53,13 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
                total_non_event_matrix = N[(1+total_vaccine_brands + 1):nrow(N),]
 
                flat_total_events =c(total_event_matrix)
+               flat_event_rates = rep(full_table[1,], nsims)
 
                #see simulations for the reason of this choice
                flat_events_person_time = pmax(
                  rnorm(
                    n = length(flat_total_events),
-                   mean = flat_total_events*study_period/2,
+                   mean = flat_total_events*trunc_exp_mean(event_rate = flat_event_rates, trunc_limit = study_period),
                    sd = sqrt(flat_total_events * study_period^2/12)
                  ),
                  0

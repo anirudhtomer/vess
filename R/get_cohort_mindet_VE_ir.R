@@ -42,6 +42,7 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
     #the 'n' parameter need not be integer for this API.
     sapply(missing_data_adjusted_total_subjects * group_coverage * (1-confounder_adjustment_Rsquared),
            function(n){
+             #sub_table[2, 2]/sum(sub_table[,2]) is done because irexp0 is a probability
              ret = try(1 - epi.sscohortc(irexp1 = NA, irexp0 = sub_table[2, 2]/sum(sub_table[,2]),
                                          n = n,
                                          power = power,

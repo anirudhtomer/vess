@@ -6,6 +6,13 @@
 # itexp <- function(u, rate, t) { -log(1-u*(1-exp(-t*rate)))/rate }
 # rtexp <- function(n, rate, t) { itexp(runif(n), rate, t) }
 #
+# trunc_mean = function(rate, limit){
+#   lambda = 1/rate
+#   k=limit/lambda
+#
+#   return(lambda * (1-(k+1)*exp(-k))/(1-exp(-k)))
+# }
+#
 # N = 10000
 # settings_df = expand.grid(
 #   rate = c(0.0001, 0.001, 0.01, 0.1, 1),
@@ -39,7 +46,7 @@
 #
 # #next check sampling dist of sum
 # settings_df = expand.grid(study_period = c(1, 3, 5, 7),
-#                           n = c(2, 5, 10, 25, 50),
+#                           n = c(5, 50, 500),
 #                           rate = c(0.01, 0.1)
 # )
 #
@@ -50,18 +57,20 @@
 #   n = settings_df$n[i]
 #
 #   rtexp_data = sapply(1:N, function(i){
-#     #sum(rtexp(n = n, rate = rate, study_period))
-#     mean(rtexp(n = n, rate = rate, study_period))
+#     sum(rtexp(n = n, rate = rate, study_period))
+#     #mean(rtexp(n = n, rate = rate, study_period))
 #   })
 #
 #   runif_data = sapply(1:N, function(i){
-#     #sum(runif(n = n, min = 0, max = study_period))
-#     mean(runif(n = n, min = 0, max = study_period))
+#     sum(runif(n = n, min = 0, max = study_period))
+#     #mean(runif(n = n, min = 0, max = study_period))
 #   })
 #
 #   #normal_dist using var = n * var(unif)
 #   #rnorm_data = rnorm(n = N, mean = n*study_period/2, sd = sqrt(n * study_period^2/12))
-#   rnorm_data = rnorm(n = N, mean = study_period/2, sd = sqrt(study_period^2/(12*n)))
+#   #rnorm_data = rnorm(n = N, mean = study_period/2, sd = sqrt(study_period^2/(12*n)))
+#   #rnorm_data = rnorm(n = N, mean = trunc_mean(rate, study_period), sd = sqrt(study_period^2/(12*n)))
+#   rnorm_data = rnorm(n = N, mean = n*trunc_mean(rate, study_period), sd = sqrt(n*study_period^2/12))
 #
 #   plot_df = data.frame(rate=rate, study_period = study_period,n =n,
 #                        data=c(rtexp_data, runif_data, rnorm_data),
