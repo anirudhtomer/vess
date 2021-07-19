@@ -24,7 +24,7 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
   relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
   full_table = get_cohort_full_table_ir(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
-                                     proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
+                                        proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
   total_total_subject_settings = length(total_subjects)
   missing_data_adjusted_total_subjects = round(total_subjects * (1-prob_missing_data))
@@ -39,6 +39,12 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
     group_coverage = sum(sub_table)
     subpopulation_coverage = vaccine1_coverage / group_coverage
 
+    anticipated_VEs = anticipated_VE_for_each_brand_and_strain[comparison_set[c(BRAND1, BRAND2)],
+                                                               comparison_set[STRAIN]]
+    #irr index 1 is lower limit of incidence rate ratio and to be chosen when VE is 0 to 100%
+    #irr index 2 is upper limit of incidence rate ratio and to be chosen when VE is between -100% and 0%
+    irr_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
+
     #the 'n' parameter need not be integer for this API.
     sapply(missing_data_adjusted_total_subjects * group_coverage * (1-confounder_adjustment_Rsquared),
            function(n){
@@ -47,7 +53,7 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
                                          n = n,
                                          power = power,
                                          r = subpopulation_coverage/(1-subpopulation_coverage),
-                                         design = 1, sided.test = 2, conf.level = 1-alpha)$irr[1], silent = T)
+                                         design = 1, sided.test = 2, conf.level = 1-alpha)$irr[irr_index], silent = T)
              if(inherits(ret, "try-error")){
                return(NA)
              }else{
