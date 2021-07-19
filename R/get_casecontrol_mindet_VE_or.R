@@ -33,7 +33,7 @@ get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain
   case_control_full_tables = get_case_control_full_tables(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
                                                           proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
-  full_table = cbind(case_control_full_tables$full_table_cases, case_control_full_tables$full_vector_controls)
+  full_table = cbind(case_control_full_tables$full_vector_controls, case_control_full_tables$full_table_cases)
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, FUN = function(comparison_set){
     strain_index = comparison_set[STRAIN] + CONTROL_COL
@@ -45,11 +45,15 @@ get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain
 
     coverage_subpopulation = control_probs[1] / sum(control_probs)
 
-    anticipated_VEs = anticipated_VE_for_each_brand_and_strain[comparison_set[c(BRAND1, BRAND2)],
-                                                               comparison_set[STRAIN]]
-    #irr index 1 is lower limit of incidence rate ratio and to be chosen when VE is 0 to 100%
-    #irr index 2 is upper limit of incidence rate ratio and to be chosen when VE is between -100% and 0%
-    or_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
+    if(comparison_set[BRAND2] == 0){
+      or_index = 1
+    }else{
+      anticipated_VEs = anticipated_VE_for_each_brand_and_strain[comparison_set[c(BRAND1, BRAND2)],
+                                                                 comparison_set[STRAIN]]
+      #irr index 1 is lower limit of incidence rate ratio and to be chosen when VE is 0 to 100%
+      #irr index 2 is upper limit of incidence rate ratio and to be chosen when VE is between -100% and 0%
+      or_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
+    }
 
     case_counts = missing_data_adjusted_total_cases * sum(case_probs) * (1-confounder_adjustment_Rsquared)
     control_counts = missing_data_adjusted_total_controls * sum(control_probs) * (1-confounder_adjustment_Rsquared)
