@@ -40,13 +40,13 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
     subpopulation_coverage = vaccine1_coverage / group_coverage
 
     if(comparison_set[BRAND2] == 0){
-      or_index = 1
+      irr_index = 1
     }else{
       anticipated_VEs = anticipated_VE_for_each_brand_and_strain[comparison_set[c(BRAND1, BRAND2)],
                                                                  comparison_set[STRAIN]]
       #irr index 1 is lower limit of incidence rate ratio and to be chosen when VE is 0 to 100%
       #irr index 2 is upper limit of incidence rate ratio and to be chosen when VE is between -100% and 0%
-      or_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
+      irr_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
     }
 
     #the 'n' parameter need not be integer for this API.
