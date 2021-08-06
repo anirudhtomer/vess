@@ -1,7 +1,7 @@
 #' @importFrom utils combn
 #' @export
 get_cohort_expectedCI_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
-                                         matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9), nrow = 3, ncol = 3, byrow = T,
+                                         matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1), nrow = 3, ncol = 3, byrow = T,
                                                 dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
                                        brand_proportions_in_vaccinated =
                                          c('brand1'=0.3, 'brand2'=0.5, 'brand3'=0.2),

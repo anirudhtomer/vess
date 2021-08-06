@@ -1,4 +1,3 @@
-#' @importFrom matrixStats colCumsums
 #' @importFrom utils combn
 #' @export
 get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain=

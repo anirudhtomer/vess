@@ -64,7 +64,7 @@ get_comparison_combinations = function(total_vaccine_brands, total_case_strains,
 
 #ir is incidence risk
 get_cohort_full_table_ir = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
-                                 proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
+                                    proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
   #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
   #The extra 1 column is for unvaccinated
   #The extra 1 row is for controls
@@ -100,30 +100,64 @@ get_cohort_full_table_ir = function(anticipated_VE_for_each_brand_and_strain, ov
 }
 
 #irr is incidence rate ratio
+# get_cohort_full_table_irr = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
+#                                      overall_attack_rate_in_unvaccinated, study_period,
+#                                      proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
+#   #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
+#   #The extra 1 column is for unvaccinated
+#   #The extra 1 row is for controls
+#
+#   #the last column of unvaccinated is given by
+#   prob_unvaccinated = 1 - overall_vaccine_coverage
+#   prob_vaccinated_with_brands = brand_proportions_in_vaccinated * overall_vaccine_coverage
+#
+#   incidence_rate_unvaccinated =  - log(1 - overall_attack_rate_in_unvaccinated) / study_period
+#   incidence_rate_vaccinated  = (1 - anticipated_VE_for_each_brand_and_strain) * incidence_rate_unvaccinated
+#
+#   full_table = cbind('unvaccinated'=c('brand_prop'=prob_unvaccinated, 'strain1'=incidence_rate_unvaccinated),
+#                      rbind('brand_prop'=prob_vaccinated_with_brands, t(incidence_rate_vaccinated)))
+#
+#   full_table = rbind(full_table, 'cum_risk_study_period' = 1 - exp(-full_table[2,] * study_period))
+#
+#   return(full_table)
+# }
+
+#irr is incidence rate ratio
 get_cohort_full_table_irr = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
                                      overall_attack_rate_in_unvaccinated, study_period,
                                      proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
-  #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
-  #The extra 1 column is for unvaccinated
-  #The extra 1 row is for controls
 
-  #the last column of unvaccinated is given by
+  #read strain as cause, and hazard as incidence rate
   prob_unvaccinated = 1 - overall_vaccine_coverage
+  prob_case_given_unvaccinated = overall_attack_rate_in_unvaccinated
+  prob_control_given_unvaccinated = 1 - prob_case_given_unvaccinated
+
+  overall_incidence_rate_given_unvaccinated = (- log(1 - prob_case_given_unvaccinated) / study_period)
+  strain_specific_incidence_rate_given_unvaccinated = overall_incidence_rate_given_unvaccinated * proportion_strains_in_unvaccinated_cases
+  prob_case_each_strain_given_unvaccinated = prob_case_given_unvaccinated * proportion_strains_in_unvaccinated_cases
+
+  relative_rate_ratio_for_each_brand_and_strain = 1 - t(anticipated_VE_for_each_brand_and_strain)
+
+  strain_specific_incidence_rate_given_vaccinated_with_brand = relative_rate_ratio_for_each_brand_and_strain * strain_specific_incidence_rate_given_unvaccinated
+  overall_incidence_rate_given_vaccinated_with_brand = colSums(strain_specific_incidence_rate_given_vaccinated_with_brand)
+  prob_case_given_vaccinated_with_brand = 1 - exp(-overall_incidence_rate_given_vaccinated_with_brand * study_period)
+  prob_control_given_vaccinated_with_brand = 1 - prob_case_given_vaccinated_with_brand
+  prob_case_each_strain_given_vaccinated_with_brand = (t(strain_specific_incidence_rate_given_vaccinated_with_brand) / overall_incidence_rate_given_vaccinated_with_brand) * prob_case_given_vaccinated_with_brand
+
+  conditional_prob_table = rbind('unvaccinated'=c('controls'=prob_control_given_unvaccinated, prob_case_each_strain_given_unvaccinated),
+                                 cbind('controls'=prob_control_given_vaccinated_with_brand, prob_case_each_strain_given_vaccinated_with_brand))
   prob_vaccinated_with_brands = brand_proportions_in_vaccinated * overall_vaccine_coverage
 
-  incidence_rate_unvaccinated =  - log(1 - overall_attack_rate_in_unvaccinated) / study_period
-  incidence_rate_vaccinated  = (1 - anticipated_VE_for_each_brand_and_strain) * incidence_rate_unvaccinated
+  full_table_prob = t(conditional_prob_table * c(prob_unvaccinated, prob_vaccinated_with_brands))
+  conditional_table_incidence_rate = cbind('unvaccinated'=strain_specific_incidence_rate_given_unvaccinated,
+                                           strain_specific_incidence_rate_given_vaccinated_with_brand)
 
-  full_table = cbind('unvaccinated'=c('brand_prop'=prob_unvaccinated, 'strain1'=incidence_rate_unvaccinated),
-                     rbind('brand_prop'=prob_vaccinated_with_brands, t(incidence_rate_vaccinated)))
-
-  full_table = rbind(full_table, 'cum_risk_study_period' = 1 - exp(-full_table[2,] * study_period))
-
-  return(full_table)
+  return(list(full_table_prob=full_table_prob,
+              conditional_table_incidence_rate=conditional_table_incidence_rate))
 }
 
 get_case_control_full_tables = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
-                                       proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
+                                        proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
   prob_vaccinated_each_brand = brand_proportions_in_vaccinated * overall_vaccine_coverage
   #P(Vaccination) = P(Vaccination | Case) P(Case) + P(Vaccination | Control) (1-P(Case))
   #In general P(Case) is really low for diseases like influenza or even dengue. hardly 1-3% in the population
