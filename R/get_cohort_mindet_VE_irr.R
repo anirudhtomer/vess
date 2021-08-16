@@ -2,14 +2,12 @@
 #' @importFrom utils combn
 #' @export
 get_cohort_mindet_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
-                                      matrix(data=c(0.7, 0.4, 0.1),
-                                             nrow = 3, ncol = 1,
-                                             byrow = T,
-                                             dimnames = list(paste0('brand', 1:3), paste0('strain', 1))),
+                                      matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1), nrow = 3, ncol = 3, byrow = F,
+                                             dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
                                     brand_proportions_in_vaccinated =
                                       c('brand1'=0.3, 'brand2'=0.5, 'brand3'=0.2),
                                     overall_vaccine_coverage=0.3,
-                                    proportion_strains_in_unvaccinated_cases = c('strain1'=1),
+                                    proportion_strains_in_unvaccinated_cases = c('strain1'=0.6, 'strain2'=0.3, 'strain3'=0.1),
                                     overall_attack_rate_in_unvaccinated = 0.1,
                                     study_period=1,
                                     calculate_relative_VE = T,
@@ -26,20 +24,26 @@ get_cohort_mindet_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
 
   relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
-  full_table = get_cohort_full_table_irr(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
+  all_tables = get_cohort_full_table_irr(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
                                          overall_attack_rate_in_unvaccinated, study_period,
                                          proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
+
+  full_table_prob = all_tables$full_table_prob
+  event_rates_table = all_tables$conditional_table_incidence_rate
 
   total_total_subject_settings = length(total_subjects)
   missing_data_adjusted_total_subjects = round(total_subjects * (1-prob_missing_data))
 
+  CONTROL_ROW = 1
   UNVACCINATED_COL = 1
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, function(comparison_set){
-    sub_table = full_table[, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
+    #c(0, comparison_set[STRAIN]) + CONTROL_ROW
+    sub_table = full_table_prob[, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
+    event_rate_comparison_group = event_rates_table[comparison_set[STRAIN], comparison_set[BRAND2] + UNVACCINATED_COL]
 
-    vaccine1_coverage = sub_table[1,1]
-    group_coverage = sum(sub_table[1,])
+    vaccine1_coverage = sum(sub_table[,1])
+    group_coverage = sum(sub_table)
     subpopulation_coverage = vaccine1_coverage / group_coverage
 
     if(comparison_set[BRAND2] == 0){
@@ -55,7 +59,7 @@ get_cohort_mindet_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
     #the 'n' parameter need not be integer for this API.
     sapply(missing_data_adjusted_total_subjects * group_coverage * (1-confounder_adjustment_Rsquared),
            function(n){
-             ret = try(1 - epi.sscohortt(irexp1 = NA, irexp0 = sub_table[2,2],
+             ret = try(1 - epi.sscohortt(irexp1 = NA, irexp0 = event_rate_comparison_group,
                                          FT = study_period, n = n, power = power,
                                          r = subpopulation_coverage/(1-subpopulation_coverage),
                                          design = 1, sided.test = 2, conf.level = 1-alpha

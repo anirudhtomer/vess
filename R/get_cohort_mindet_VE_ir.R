@@ -32,6 +32,7 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
   CONTROL_ROW = 1
   UNVACCINATED_COL = 1
 
+  browser()
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, function(comparison_set){
     sub_table = full_table[c(0, comparison_set[STRAIN]) + CONTROL_ROW, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
 
