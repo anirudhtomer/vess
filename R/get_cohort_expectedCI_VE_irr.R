@@ -62,7 +62,6 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
     dim = dim(cases_person_time_sum_mean)
   )
 
-  browser()
   #summarize person time by summing it up per brand. that becomes the denominator
   # person_time_sims = apply(person_time_sims, c(2,3), FUN = function(x){
   #   cumsum_overall = c(0, cumsum(x))
