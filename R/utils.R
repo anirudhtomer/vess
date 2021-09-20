@@ -179,3 +179,198 @@ get_case_control_full_tables = function(anticipated_VE_for_each_brand_and_strain
               full_vector_controls = c('unvaccinated'=prob_unvaccinated_given_control, prob_vaccinated_each_brand_given_control)))
 }
 
+get_allornone_ve_estimand_components = function(anticipated_VE_for_each_brand_and_strain, incidence_rate_unvaccinated, study_period){
+
+  lambda_i = incidence_rate_unvaccinated
+  Lambda = sum(lambda_i)
+  Theta_m = rowSums(anticipated_VE_for_each_brand_and_strain)
+
+  pr_c_0_v_0 = exp(-Lambda*study_period)
+  overall_attack_rate_unvaccinated = 1 - pr_c_0_v_0
+  pr_c_i_v_0 = overall_attack_rate_unvaccinated * lambda_i/Lambda
+  e_y_v_0 = overall_attack_rate_unvaccinated / Lambda
+
+  total_brands = nrow(anticipated_VE_for_each_brand_and_strain)
+  total_strains = length(incidence_rate_unvaccinated)
+  combination_list = lapply(X = 1:total_strains, FUN = combn, x=total_strains)
+
+  pr_c_0_v_m = pr_c_0_v_0 * (1 - Theta_m) +
+    sapply(
+      X = 1:total_brands, FUN = function(brand){
+        thetas = anticipated_VE_for_each_brand_and_strain[brand,]
+        counter = 1
+        summation = 0
+        for(i in 1:length(combination_list)){
+          for(j in 1:ncol(combination_list[[i]])){
+            combination = combination_list[[i]][,j]
+            summation = summation + exp(-(Lambda - sum(lambda_i[combination])) * study_period) * thetas[counter]
+            counter = counter + 1
+          }
+        }
+        return(summation)
+      }
+    )
+
+  pr_c_i_v_m = lambda_i %*% t(overall_attack_rate_unvaccinated * (1 - Theta_m) / Lambda)
+  rownames(pr_c_i_v_m) = paste0('strain', 1:total_strains)
+
+  for(strain in 1:nrow(pr_c_i_v_m)){
+    for(brand in 1:ncol(pr_c_i_v_m)){
+      thetas = anticipated_VE_for_each_brand_and_strain[brand,]
+      combination_list = lapply(X = 1:total_strains, FUN = combn, x=total_strains)
+      counter = 1
+      for(i in 1:length(combination_list)){
+        for(j in 1:ncol(combination_list[[i]])){
+          combination = combination_list[[i]][,j]
+          if(!strain %in% combination){
+            pr_c_i_v_m[strain, brand] = pr_c_i_v_m[strain, brand] +
+              if(Lambda - sum(lambda_i[combination]) == 0){
+                lambda_i[strain] * study_period * thetas[counter]
+              }else{
+                lambda_i[strain]*(1 - exp(-(Lambda - sum(lambda_i[combination])) * study_period)) * thetas[counter] / (Lambda - sum(lambda_i[combination]))
+              }
+
+          }
+          counter = counter + 1
+        }
+      }
+    }
+  }
+
+  e_y_v_m = overall_attack_rate_unvaccinated * (1 - Theta_m) / Lambda +
+    sapply(
+      X = 1:total_brands, FUN = function(brand){
+        thetas = anticipated_VE_for_each_brand_and_strain[brand,]
+        combination_list = lapply(X = 1:total_strains, FUN = combn, x=total_strains)
+        counter = 1
+        summation = 0
+        for(i in 1:length(combination_list)){
+          for(j in 1:ncol(combination_list[[i]])){
+            combination = combination_list[[i]][,j]
+            summation = summation +
+              if((Lambda - sum(lambda_i[combination])) == 0){
+                study_period * thetas[counter]
+              }else{
+                (1 - exp(-(Lambda - sum(lambda_i[combination])) * study_period)) * thetas[counter] / (Lambda - sum(lambda_i[combination]))
+              }
+
+            counter = counter + 1
+          }
+        }
+        return(summation)
+      }
+    )
+
+
+  absolute_ve_true = matrix(data=0, nrow = total_strains, ncol = total_brands)
+  for(strain in 1:nrow(absolute_ve_true)){
+    for(brand in 1:ncol(absolute_ve_true)){
+      thetas = anticipated_VE_for_each_brand_and_strain[brand,]
+      combination_list = lapply(X = 1:total_strains, FUN = combn, x=total_strains)
+      counter = 1
+      for(i in 1:length(combination_list)){
+        for(j in 1:ncol(combination_list[[i]])){
+          combination = combination_list[[i]][,j]
+          if(strain %in% combination){
+            absolute_ve_true[strain, brand] = absolute_ve_true[strain, brand] + thetas[counter]
+          }
+          counter = counter + 1
+        }
+      }
+    }
+  }
+  rownames(absolute_ve_true) = paste0("strain",1:total_strains)
+  colnames(absolute_ve_true) = paste0("brand",1:total_brands)
+
+  return(list(pr_c_0_v_0 = pr_c_0_v_0, pr_c_i_v_0 = pr_c_i_v_0, e_y_v_0 = e_y_v_0,
+              pr_c_0_v_m = pr_c_0_v_m, pr_c_i_v_m = pr_c_i_v_m, e_y_v_m = e_y_v_m,
+              theta_im = 1 - absolute_ve_true))
+}
+
+get_leaky_ve_estimand_components = function(anticipated_VE_for_each_brand_and_strain,
+                                            incidence_rate_unvaccinated,
+                                            study_period){
+  lambda_i = incidence_rate_unvaccinated
+  Lambda = sum(lambda_i)
+  pr_c_0_v_0 = exp(-Lambda*study_period)
+  overall_attack_rate_unvaccinated = 1 - pr_c_0_v_0
+  pr_c_i_v_0 = overall_attack_rate_unvaccinated * lambda_i/Lambda
+  e_y_v_0 = overall_attack_rate_unvaccinated / Lambda
+
+  theta_im = t(1 - anticipated_VE_for_each_brand_and_strain)
+  Theta_m = colSums(theta_im * lambda_i) / Lambda
+  Theta_mLambda = Theta_m * Lambda
+  pr_c_0_v_m = exp(-Theta_mLambda * study_period)
+  overall_attack_rate_vaccinated_m = 1 - pr_c_0_v_m
+
+  pr_c_i_v_m = t(t(theta_im * lambda_i) * (overall_attack_rate_vaccinated_m / Theta_mLambda))
+  e_y_v_m = overall_attack_rate_vaccinated_m / Theta_mLambda
+
+  return(list(pr_c_0_v_0 = pr_c_0_v_0, pr_c_i_v_0 = pr_c_i_v_0, e_y_v_0 = e_y_v_0,
+              pr_c_0_v_m = pr_c_0_v_m, pr_c_i_v_m = pr_c_i_v_m, e_y_v_m = e_y_v_m,
+              theta_im = theta_im))
+}
+
+get_ve_from_components = function(components){
+  pr_c_0_v_0 = components$pr_c_0_v_0
+  pr_c_i_v_0 = components$pr_c_i_v_0
+  e_y_v_0 = components$e_y_v_0
+  pr_c_0_v_m = components$pr_c_0_v_m
+  pr_c_i_v_m = components$pr_c_i_v_m
+  e_y_v_m = components$e_y_v_m
+  theta_im = components$theta_im
+
+  total_strains = nrow(theta_im)
+  total_brands = ncol(theta_im)
+
+  absolute_ve_true = 1 - theta_im
+  absolute_ve_irr = 1 - (pr_c_i_v_m / pr_c_i_v_0) * (e_y_v_0 / e_y_v_m)
+  absolute_ve_ci = 1 - (pr_c_i_v_m / pr_c_i_v_0)
+  absolute_ve_or = 1 - (pr_c_i_v_m / pr_c_i_v_0) * (pr_c_0_v_0/pr_c_0_v_m)
+
+  strain_comparisons = combn(total_strains, 2)
+  strain_comparisons = cbind(strain_comparisons, strain_comparisons[c(2,1),])
+  strain_comparisons = rbind(strain_comparisons[, rep(1:ncol(strain_comparisons), each=total_brands), drop=F],
+                             rep(1:total_brands, ncol(strain_comparisons)), NA, NA, NA, NA)
+  rownames(strain_comparisons) = c("strain1", "strain2", "vaccine", "relative_ve_true", "relative_ve_irr", "relative_ve_ci", "relative_ve_or")
+  strain_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_ci", "relative_ve_or"),] = apply(X = strain_comparisons, MARGIN = 2, FUN = function(comparison){
+    strain1 = comparison['strain1']
+    strain2 = comparison['strain2']
+    vaccine = comparison['vaccine']
+
+    thetas = theta_im[c(strain1, strain2), vaccine]
+
+    c(
+      1 - thetas[1]/thetas[2],
+      rep(1 - (pr_c_i_v_m[strain1, vaccine]/pr_c_i_v_m[strain2, vaccine])/ (pr_c_i_v_0[strain1]/pr_c_i_v_0[strain2]), 3)
+    )
+  })
+
+  vaccine_comparisons = combn(total_brands, 2)
+  vaccine_comparisons = cbind(vaccine_comparisons, vaccine_comparisons[c(2,1),])
+  vaccine_comparisons = rbind(vaccine_comparisons[, rep(1:ncol(vaccine_comparisons), each=total_strains), drop=F],
+                              rep(1:total_strains, ncol(vaccine_comparisons)), NA, NA, NA, NA)
+  rownames(vaccine_comparisons) = c("vaccine1", "vaccine2", "strain", "relative_ve_true", "relative_ve_irr", "relative_ve_ci", "relative_ve_or")
+
+  vaccine_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_ci", "relative_ve_or"),] = apply(X = vaccine_comparisons, MARGIN = 2, FUN = function(comparison){
+    vaccine1 = comparison['vaccine1']
+    vaccine2 = comparison['vaccine2']
+    strain = comparison['strain']
+
+    thetas = theta_im[strain, c(vaccine1, vaccine2)]
+    theta_ratio = thetas[1]/thetas[2]
+
+    c(1 - theta_ratio,
+      1 - (pr_c_i_v_m[strain, vaccine1]/pr_c_i_v_m[strain, vaccine2]) / (e_y_v_m[vaccine2]/e_y_v_m[vaccine1]),
+      1 - (pr_c_i_v_m[strain, vaccine1]/pr_c_i_v_m[strain, vaccine2]),
+      1 - (pr_c_i_v_m[strain, vaccine1]/pr_c_i_v_m[strain, vaccine2]) / (pr_c_0_v_m[vaccine2]/pr_c_0_v_m[vaccine1])
+    )
+  })
+
+  return(list(absolute_ve = list(absolute_ve_true=absolute_ve_true,
+                                 absolute_ve_irr=absolute_ve_irr,
+                                 absolute_ve_ci=absolute_ve_ci,
+                                 absolute_ve_or=absolute_ve_or),
+              relative_ve_across_strain_given_vaccine = strain_comparisons,
+              relative_ve_across_vaccines_given_strain = vaccine_comparisons))
+}
