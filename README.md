@@ -1,6 +1,8 @@
-# VESS: An R package for vaccine efficacy sample size calculations.
+# VESS: An R package for vaccine efficacy sample size calculations in a multiple vaccine and multiple pathogen variant scenario.
 
-## Cohort studies
+An important problem in vaccine efficacy (VE) studies is sample size calculation during study planning. In this regard, vaccine manufacturers may face two types of challenges. First, to have enough subjects to show a non-zero VE or to show that VE is above a certain threshold (superiority trial). In this setting one can obtain an appropriate sample size utilizing the hypothesis testing framework. A second type of challenge is having enough subjects to obtain precise estimates of VE to further assist in decisions pertaining to the various phases of the development of a vaccine. In statistical terms, precision refers to confidence limits of the VE, and a narrower confidence interval can be obtained with a larger sample size. While the actual confidence limits depend upon the actual data, using Monte Carlo simulations confidence intervals can also be simulated and a range for both the upper and lower confidence limit can be obtained. Currently available tools such as the **R** package **epiR** (<https://cran.r-project.org/web/packages/epiR/index.html>) and general purpose calculators such as PASS (<https://www.ncss.com/software/pass/>) only handle the single variant and single vaccine scenario. Another drawback of the current tools is that for sample size calculations aiming at obtaining a certain precision \citep{kelley2003obtaining} for VE, the calculators provide precision assuming that the actual data will be equal to the expected cell counts of a 2 x 2 cross table of infection and vaccination status. Thus, they ignore the randomness of the data generating process. Besides, current calculators also do not support multiple variants and multiple vaccines.
 
+
+## References
 
 
