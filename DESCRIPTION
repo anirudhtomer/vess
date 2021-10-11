@@ -1,13 +1,13 @@
 Package: vess
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Vaccine Efficacy Sample Size Calculations in a Multiple Vaccine and Multiple Pathogen Variant Scenario
+Version: 1.0.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Anirudh",
+           family = "Tomer",
            role = c("aut", "cre"),
            email = "first.last@example.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+Description: An R Package for Vaccine Efficacy Sample Size Calculations in a Multiple Vaccine and Multiple Pathogen Variant Scenario
 License: `use_mit_license()`, `use_gpl3_license()` or friends to
     pick a license
 Encoding: UTF-8

@@ -1,4 +1,23 @@
+#' Get expected lower and expected upper limit of strain and vaccine-specific efficacy
+#' @description
+#' The function `get_cohort_expectedCI_VE_cir` ouiao
+#' @importFrom Rdpack reprompt
 #' @importFrom utils combn
+#'
+#' @param anticipated_VE_for_each_brand_and_strain a matrix of vaccine efficacy of each vaccine (column) against each strain (row). Each value must be a real number between 0 and 1.
+#' @param brand_proportions_in_vaccinated a vector denoting the proportion in which vaccines are given in the vaccinated subjects of the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
+#' @param overall_vaccine_coverage the proportion of the study cohort that will be vaccinated. It should be a real number between 0 and 1.
+#' @param proportion_strains_in_unvaccinated_cases a vector of the proportions in which each strain is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
+#' @param overall_attack_rate_in_unvaccinated the proportion of the study cohort that is expected to infected over the study period. It should be a real number between 0 and 1.
+#' @param calculate_relative_VE a logical indicating if calculations should also be done for relative vaccine efficacy (default `TRUE`).
+#' @param alpha It controls the width `[100*alpha/2, 100*(1 - alpha/2)]%` of the confidence interval. It is a numeric that must take a value between 0 and 1. .
+#' @param confounder_adjustment_Rsquared we use this parameter to adjust the calculations for potential confounders using the methodology proposed by \insertCite{hsieh2000sample}. It represents the amount of variance (R^2) explained in a regression model where vaccination status is the outcome and confounders of interest are predictors. It is a numeric that must take a value between 0 (no adjustment for confonders) and 1.
+#' @param prob_missing_data to adjust the calculations for non-informative and random subject loss to follow-up/dropout. it should take a numeric value between 0 and 1.
+#' @param total_subjects a vector of study cohort size for which calculations should be done.
+#' @param nsims total number of Monte Carlo simulations conducted.
+#'
+#' @references
+#'     \insertAllCited{}
 #' @export
 get_cohort_expectedCI_VE_cir = function(anticipated_VE_for_each_brand_and_strain=
                                          matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1), nrow = 3, ncol = 3, byrow = T,
