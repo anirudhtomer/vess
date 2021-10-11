@@ -21,7 +21,7 @@ get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain
   total_vaccine_brands = length(brand_proportions_in_vaccinated)
   total_case_strains = length(proportion_strains_in_unvaccinated_cases)
 
-  relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
+  relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
   total_total_case_settings = length(total_cases)
   missing_data_adjusted_total_cases = round(total_cases * (1-prob_missing_data))

@@ -6,6 +6,9 @@
 BRAND1 = 'Brand 1'
 BRAND2 = 'Brand 2'
 STRAIN = 'Strain'
+BRAND = 'Brand'
+STRAIN1 = 'Strain 1'
+STRAIN2 = 'Strain 2'
 CONTROLS = 'controls'
 UNVACCINATED = 'unvaccinated'
 
@@ -49,10 +52,11 @@ check_input = function(anticipated_VE_for_each_brand_and_strain, brand_proportio
   }
 }
 
-get_comparison_combinations = function(total_vaccine_brands, total_case_strains, calculate_relative_VE){
+get_vaccine_comparison_combinations = function(total_vaccine_brands, total_case_strains, calculate_relative_VE=F){
   relative_VE_combn = matrix(c(1:total_vaccine_brands, rep(0, total_vaccine_brands)), byrow = T, nrow = 2)
   if(calculate_relative_VE & total_vaccine_brands>1){
-    relative_VE_combn = cbind(combn(total_vaccine_brands, 2), relative_VE_combn)
+    combinations = combn(total_vaccine_brands, 2)
+    relative_VE_combn = cbind(relative_VE_combn, combinations, combinations[c(2,1),])
   }
   relative_VE_combn = rbind(relative_VE_combn[,rep(1:ncol(relative_VE_combn), each=total_case_strains), drop=F],
                             rep(1:total_case_strains, ncol(relative_VE_combn)))
@@ -62,9 +66,24 @@ get_comparison_combinations = function(total_vaccine_brands, total_case_strains,
   return(relative_VE_combn)
 }
 
+get_strain_comparison_combinations = function(total_vaccine_brands, total_case_strains){
+  if(total_case_strains>1){
+    relative_VE_combn = combn(total_case_strains, 2)
+    relative_VE_combn = rbind(relative_VE_combn[,rep(1:ncol(relative_VE_combn), each=total_vaccine_brands), drop=F],
+                              rep(1:total_vaccine_brands, ncol(relative_VE_combn)))
+
+    rownames(relative_VE_combn) = c(STRAIN1, STRAIN2, BRAND)
+    relative_VE_combn = cbind(relative_VE_combn, relative_VE_combn[c(2,1,3),])
+    colnames(relative_VE_combn) = paste('Combination' , 1:ncol(relative_VE_combn))
+  }else{
+    relative_VE_combn = NULL
+  }
+  return(relative_VE_combn)
+}
+
 #ir is incidence risk
-get_cohort_full_table_ir = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
-                                    proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
+get_cohort_full_table_cir = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+                                     proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
   #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
   #The extra 1 column is for unvaccinated
   #The extra 1 row is for controls
@@ -332,8 +351,8 @@ get_ve_from_components = function(components){
   strain_comparisons = cbind(strain_comparisons, strain_comparisons[c(2,1),])
   strain_comparisons = rbind(strain_comparisons[, rep(1:ncol(strain_comparisons), each=total_brands), drop=F],
                              rep(1:total_brands, ncol(strain_comparisons)), NA, NA, NA, NA)
-  rownames(strain_comparisons) = c("strain1", "strain2", "vaccine", "relative_ve_true", "relative_ve_irr", "relative_ve_ci", "relative_ve_or")
-  strain_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_ci", "relative_ve_or"),] = apply(X = strain_comparisons, MARGIN = 2, FUN = function(comparison){
+  rownames(strain_comparisons) = c("strain1", "strain2", "vaccine", "relative_ve_true", "relative_ve_irr", "relative_ve_cir", "relative_ve_or")
+  strain_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_cir", "relative_ve_or"),] = apply(X = strain_comparisons, MARGIN = 2, FUN = function(comparison){
     strain1 = comparison['strain1']
     strain2 = comparison['strain2']
     vaccine = comparison['vaccine']
@@ -350,9 +369,9 @@ get_ve_from_components = function(components){
   vaccine_comparisons = cbind(vaccine_comparisons, vaccine_comparisons[c(2,1),])
   vaccine_comparisons = rbind(vaccine_comparisons[, rep(1:ncol(vaccine_comparisons), each=total_strains), drop=F],
                               rep(1:total_strains, ncol(vaccine_comparisons)), NA, NA, NA, NA)
-  rownames(vaccine_comparisons) = c("vaccine1", "vaccine2", "strain", "relative_ve_true", "relative_ve_irr", "relative_ve_ci", "relative_ve_or")
+  rownames(vaccine_comparisons) = c("vaccine1", "vaccine2", "strain", "relative_ve_true", "relative_ve_irr", "relative_ve_cir", "relative_ve_or")
 
-  vaccine_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_ci", "relative_ve_or"),] = apply(X = vaccine_comparisons, MARGIN = 2, FUN = function(comparison){
+  vaccine_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_cir", "relative_ve_or"),] = apply(X = vaccine_comparisons, MARGIN = 2, FUN = function(comparison){
     vaccine1 = comparison['vaccine1']
     vaccine2 = comparison['vaccine2']
     strain = comparison['strain']

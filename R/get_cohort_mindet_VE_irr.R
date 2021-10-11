@@ -22,7 +22,7 @@ get_cohort_mindet_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
   total_vaccine_brands = length(brand_proportions_in_vaccinated)
   total_case_strains = length(proportion_strains_in_unvaccinated_cases)
 
-  relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
+  relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
   all_tables = get_cohort_full_table_irr(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
                                          overall_attack_rate_in_unvaccinated, study_period,

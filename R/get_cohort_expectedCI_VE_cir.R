@@ -1,6 +1,6 @@
 #' @importFrom utils combn
 #' @export
-get_cohort_expectedCI_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
+get_cohort_expectedCI_VE_cir = function(anticipated_VE_for_each_brand_and_strain=
                                          matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1), nrow = 3, ncol = 3, byrow = T,
                                                 dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
                                        brand_proportions_in_vaccinated =
@@ -20,9 +20,9 @@ get_cohort_expectedCI_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
   total_vaccine_brands = length(brand_proportions_in_vaccinated)
   total_case_strains = length(proportion_strains_in_unvaccinated_cases)
 
-  relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
+  relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
-  full_table = get_cohort_full_table_ir(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+  full_table = get_cohort_full_table_cir(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
                                      proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
   #c(full_table) converts the table into a vector, going column by column

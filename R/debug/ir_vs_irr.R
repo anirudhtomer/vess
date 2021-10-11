@@ -2,7 +2,7 @@
 # library(ggplot2)
 #
 # source("R/utils.R")
-# source("R/get_cohort_mindet_VE_ir.R")
+# source("R/get_cohort_mindet_VE_cir.R")
 # source("R/get_cohort_mindet_VE_irr.R")
 #
 # vemat = matrix(data=c(0.4, 0.2), nrow = 2, ncol = 1, byrow = F,
@@ -13,7 +13,7 @@
 # attack_rate = 0.1
 #
 # browser()
-# tt_ir = get_cohort_mindet_VE_ir(anticipated_VE_for_each_brand_and_strain = vemat,
+# tt_cir = get_cohort_mindet_VE_cir(anticipated_VE_for_each_brand_and_strain = vemat,
 #                                 brand_proportions_in_vaccinated = brand_prop,
 #                                 overall_vaccine_coverage = coverage,
 #                                 proportion_strains_in_unvaccinated_cases = 1,
@@ -29,10 +29,10 @@
 #                                   calculate_relative_VE = T,
 #                                   power = 0.8, alpha = 0.05, total_subjects = total_sub)
 #
-# tt_ir$type = "Incidence risk"
+# tt_cir$type = "Incidence risk"
 # tt_irr$type = "Incidence rate"
 #
-# tt = rbind(tt_ir, tt_irr)
+# tt = rbind(tt_cir, tt_irr)
 # tt$group = paste(tt$vaccine_1, ' vs. ',tt$vaccine_2, ' for ', tt$strain)
 #
 # library(ggplot2)

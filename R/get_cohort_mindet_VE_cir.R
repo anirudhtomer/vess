@@ -1,7 +1,7 @@
 #' @importFrom epiR epi.sscc
 #' @importFrom utils combn
 #' @export
-get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
+get_cohort_mindet_VE_cir = function(anticipated_VE_for_each_brand_and_strain=
                                      matrix(data=c(0.8, 0.5, 0.3, 0.3, 0.5, 0.8, 0.9, 0.5, 1), nrow = 3, ncol = 3, byrow = F,
                                             dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
                                    brand_proportions_in_vaccinated =
@@ -21,9 +21,9 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
   total_vaccine_brands = length(brand_proportions_in_vaccinated)
   total_case_strains = length(proportion_strains_in_unvaccinated_cases)
 
-  relative_VE_combn = get_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
+  relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
 
-  full_table = get_cohort_full_table_ir(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+  full_table = get_cohort_full_table_cir(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
                                         proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
   total_total_subject_settings = length(total_subjects)
@@ -33,6 +33,7 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
   UNVACCINATED_COL = 1
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, function(comparison_set){
+    browser()
     sub_table = full_table[c(0, comparison_set[STRAIN]) + CONTROL_ROW, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
 
     vaccine1_coverage = sum(sub_table[,1])
@@ -40,13 +41,13 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
     subpopulation_coverage = vaccine1_coverage / group_coverage
 
     if(comparison_set[BRAND2] == 0){
-      irr_index = 1
+      cir_index = 1
     }else{
       anticipated_VEs = anticipated_VE_for_each_brand_and_strain[comparison_set[c(BRAND1, BRAND2)],
                                                                  comparison_set[STRAIN]]
       #irr index 1 is lower limit of incidence rate ratio and to be chosen when VE is 0 to 100%
       #irr index 2 is upper limit of incidence rate ratio and to be chosen when VE is between -100% and 0%
-      irr_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
+      cir_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
     }
 
     #the 'n' parameter need not be integer for this API.
@@ -57,7 +58,7 @@ get_cohort_mindet_VE_ir = function(anticipated_VE_for_each_brand_and_strain=
                                          n = n,
                                          power = power,
                                          r = subpopulation_coverage/(1-subpopulation_coverage),
-                                         design = 1, sided.test = 2, conf.level = 1-alpha)$irr[irr_index], silent = T)
+                                         design = 1, sided.test = 2, conf.level = 1-alpha)$irr[cir_index], silent = T)
              if(inherits(ret, "try-error")){
                return(NA)
              }else{
