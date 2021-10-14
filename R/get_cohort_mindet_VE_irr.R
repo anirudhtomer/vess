@@ -1,4 +1,71 @@
-#' @importFrom epiR epi.sscc
+#' Minimum detectable strain and vaccine-specific efficacy based on incidence rate ratio.
+#' @description
+#' The function `get_cohort_mindet_VE_irr` calculates the minimum detectable strain and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
+#' The efficacy is defined as `VE = 1 - incidence rate ratio`, and the function returns
+#' both absolute and relative minimum detectable VE. The NULL hypothesis is that `VE = 0` and
+#' the alternate hypothesis in that `VE is not equal to 0`.
+#'
+#' @param anticipated_VE_for_each_brand_and_strain a matrix of vaccine efficacy of each vaccine (row)  against each strain (column). Each value must be a real number between 0 and 1.
+#' @param brand_proportions_in_vaccinated a vector denoting the proportion in which vaccines are given in the vaccinated subjects of the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
+#' @param overall_vaccine_coverage the proportion of the study cohort that will be vaccinated. It should be a real number between 0 and 1.
+#' @param proportion_strains_in_unvaccinated_cases a vector of the proportions in which each strain is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
+#' @param overall_attack_rate_in_unvaccinated the proportion of the study cohort that is expected to infected over the study period. It should be a real number between 0 and 1.
+#' @param study_period the study period (epochs) should be numeric value greater than 0.
+#' @param calculate_relative_VE a logical indicating if calculations should also be done for relative vaccine efficacy (default `TRUE`).
+#' @param power the power to detect the VE. It is equal to 1 - Type-II error. It is a numeric that must take a value between 0 and 1.
+#' @param alpha controls the width `[100*alpha/2, 100*(1 - alpha/2)]%` of the confidence interval. It is a numeric that must take a value between 0 and 1.
+#' @param confounder_adjustment_Rsquared we use this parameter to adjust the calculations for potential confounders using the methodology proposed by Hsieh and Lavori (2000). It represents the amount of variance (R^2) explained in a regression model where vaccination status is the outcome and confounders of interest are predictors. It is a numeric that must take a value between 0 (no adjustment for confounders) and 1.
+#' @param prob_missing_data to adjust the calculations for non-informative and random subject loss to follow-up/dropout. it should take a numeric value between 0 and 1.
+#' @param total_subjects a vector of study cohort size for which calculations should be done.
+#'
+#' @details
+#' In this function efficacy is defined as `VE = 1 - incidence rate ratio`, where 'incidence rate ratio' is
+#' the ratio of incidence rates of being a case of a particular strain/variant among the groups being compared.
+#' When the groups being compared are a particular vaccine versus placebo then we call the VE
+#' as the absolute VE of the vaccine. For `M` vaccines there are `M` absolute VE, one each for the `M` vaccines.
+#' When the groups being compared are a particular vaccine versus another vaccine then we call the VE
+#' as the relative VE of the vaccines, for a particular strain. For `M` vaccines and `I` strains there are `I x 2 x utils::combn(M, 2)`
+#' permutations of relative VE of two vaccines against the same strain.
+#'
+#' We first transform the user inputs for `I` strains and `M` vaccines into a `(I + 1) x (M + 1)` cross table of
+#' cumulative-incidences of being a case or a control over the study period. The overall sum of all cumulative-incidences,
+#' i.e., all cells, of this table is 1. The first row of our cumulative-incidence table contain cumulative-incidence of being a control.
+#' The first column corresponds to subjects who are unvaccinated.
+#' Thus, the cell `{1,1}` contains the probabitity (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
+#' The remaining `Ì` rows correspond to subjects who are cases of a particular strain/variant of the pathogen,
+#' and the remaining `M` columns correspond to subjects who are vaccinated with a particular vaccine. In the
+#' person-time based estimator of incidence rates the number of cases only constitute the numerator.
+#' The denominator is person-time contributed by subjects vaccinated with a particular vaccine (or placebo).
+#' Hence, in addition to the table of cumulative-incidences, using the user input we also
+#' obtain a `I x (M + 1)` table of incidence rates.
+#'
+#' In general, while calculating minimum detectable VE it is not necessary to ask for `anticipated_VE_for_each_brand_and_strain`.
+#' The reason we need it in the multiple variant and mulitple vaccine scenario is explained next.
+#'
+#' After we obtain the cumulative incidence table our next step is to calculate the minimum detectable VE for each absolute and relative VE combination.
+#' For absolute VE we extract a `2 x 2` sub-table of cumulative-incidences from the larger `(I + 1) x (M + 1)` cross table of
+#' cumulative-incidences. The two rows of this table are for the strain of interest and controls.
+#' The two columns are for the vaccine of interest and placebo. The effective sample size for this sub-table and the absolute VE is then
+#' `total_subjects * sub_table_probability_sum * (1 - prob_missing_data) * (1 - confounder_adjustment_Rsquared)`.
+#' Here `sub_table_probability_sum` is the sum of the cells of the sub_table.
+#' This sum corresponds to the percentage of the `total_subjects` that can be used for a specific absolute VE calculation.
+#' The effective overall coverage in this sub-table is the rescaled probability of being vaccinated in the `2 x 2` sub-table.
+#' The effective incidence rate of the strain in this comparison is the strain-specific incidence rate of the strain taken
+#' from the table of incidence rates.
+#' We then simply pass these adjusted parameters to the function `epi.sscohortt` of the R package `epiR` to obtain the minimum detectable absolute VE.
+#' For relative VE the process is similar to absolute VE, except that instead of placebo we select a `2 x 2` sub-table where
+#' the columns are two vaccines of interest.
+#'
+#' @return A data frame consisting of the input parameters, absolute and relative VE combinations,
+#' and the minimum detectable VE for each absolute and relative VE combination.
+#'
+#' @examples As an example we recommend running the function without passing any parameter to it.
+#' The default scenario is for three vaccines and three pathogen strains.
+#'
+#' @references
+#' 1. Hsieh, F. Y., & Lavori, P. W. (2000). Sample-size calculations for the Cox proportional hazards regression model with nonbinary covariates. Controlled clinical trials, 21(6), 552-560.
+#' 2. Rothman KJ (2012) Epidemiology: An Introduction. 2nd Ed., Oxford University Press, Oxford.
+#' @importFrom epiR epi.sscohortt
 #' @importFrom utils combn
 #' @export
 get_cohort_mindet_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
@@ -38,8 +105,7 @@ get_cohort_mindet_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
   UNVACCINATED_COL = 1
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, function(comparison_set){
-    #c(0, comparison_set[STRAIN]) + CONTROL_ROW
-    sub_table = full_table_prob[, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
+    sub_table = full_table_prob[c(0, comparison_set[STRAIN]) + CONTROL_ROW, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
     event_rate_comparison_group = event_rates_table[comparison_set[STRAIN], comparison_set[BRAND2] + UNVACCINATED_COL]
 
     vaccine1_coverage = sum(sub_table[,1])

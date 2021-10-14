@@ -21,6 +21,16 @@ trunc_exp_mean = function(event_rate, trunc_limit){
   return(lambda * (1-(k+1)*exp(-k))/(1-exp(-k)))
 }
 
+trunc_exp_var = function(event_rate, trunc_limit){
+  lambda = 1/event_rate
+  k=trunc_limit/lambda
+
+  ret = (2 * lambda^2)/(1 - exp(-k))
+  ret = ret * (1 - exp(-k)*(k^2 + 2*k + 2)*0.5)
+
+  return(ret - trunc_exp_mean(event_rate, trunc_limit)^2)
+}
+
 get_ili_sari_symptom_prob=function(ili_sari_symptom_prob, ili_sari_symptom_incidence_rate, study_period_length){
   if(is.na(ili_sari_symptom_prob)){
     if(!is.na(ili_sari_symptom_incidence_rate) & !is.na(study_period_length)){
@@ -82,7 +92,8 @@ get_strain_comparison_combinations = function(total_vaccine_brands, total_case_s
 }
 
 #ir is incidence risk
-get_cohort_full_table_cir = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+get_cohort_full_table_cir = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
+                                     overall_attack_rate_in_unvaccinated,
                                      proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
   #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
   #The extra 1 column is for unvaccinated
@@ -117,29 +128,6 @@ get_cohort_full_table_cir = function(anticipated_VE_for_each_brand_and_strain, o
 
   return(full_table)
 }
-
-#irr is incidence rate ratio
-# get_cohort_full_table_irr = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
-#                                      overall_attack_rate_in_unvaccinated, study_period,
-#                                      proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated){
-#   #We are going to create a table with dimensions (row x columns) = (total_case_strains + 1) x (total_vaccine_brands + 1)
-#   #The extra 1 column is for unvaccinated
-#   #The extra 1 row is for controls
-#
-#   #the last column of unvaccinated is given by
-#   prob_unvaccinated = 1 - overall_vaccine_coverage
-#   prob_vaccinated_with_brands = brand_proportions_in_vaccinated * overall_vaccine_coverage
-#
-#   incidence_rate_unvaccinated =  - log(1 - overall_attack_rate_in_unvaccinated) / study_period
-#   incidence_rate_vaccinated  = (1 - anticipated_VE_for_each_brand_and_strain) * incidence_rate_unvaccinated
-#
-#   full_table = cbind('unvaccinated'=c('brand_prop'=prob_unvaccinated, 'strain1'=incidence_rate_unvaccinated),
-#                      rbind('brand_prop'=prob_vaccinated_with_brands, t(incidence_rate_vaccinated)))
-#
-#   full_table = rbind(full_table, 'cum_risk_study_period' = 1 - exp(-full_table[2,] * study_period))
-#
-#   return(full_table)
-# }
 
 #irr is incidence rate ratio
 get_cohort_full_table_irr = function(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
@@ -344,7 +332,7 @@ get_ve_from_components = function(components){
 
   absolute_ve_true = 1 - theta_im
   absolute_ve_irr = 1 - (pr_c_i_v_m / pr_c_i_v_0) * (e_y_v_0 / e_y_v_m)
-  absolute_ve_ci = 1 - (pr_c_i_v_m / pr_c_i_v_0)
+  absolute_ve_cir = 1 - (pr_c_i_v_m / pr_c_i_v_0)
   absolute_ve_or = 1 - (pr_c_i_v_m / pr_c_i_v_0) * (pr_c_0_v_0/pr_c_0_v_m)
 
   strain_comparisons = combn(total_strains, 2)
@@ -388,7 +376,7 @@ get_ve_from_components = function(components){
 
   return(list(absolute_ve = list(absolute_ve_true=absolute_ve_true,
                                  absolute_ve_irr=absolute_ve_irr,
-                                 absolute_ve_ci=absolute_ve_ci,
+                                 absolute_ve_cir=absolute_ve_cir,
                                  absolute_ve_or=absolute_ve_or),
               relative_ve_across_strain_given_vaccine = strain_comparisons,
               relative_ve_across_vaccines_given_strain = vaccine_comparisons))

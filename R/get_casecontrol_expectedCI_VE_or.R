@@ -1,3 +1,59 @@
+#' Expected lower and expected upper limit of the confidence intervals of strain and vaccine-specific efficacy based on odds ratio.
+#' @description
+#' The function `get_cohort_expectedCI_VE_or` simulates confindence intervals for strain and vaccine-specific efficacy (VE) for a given sample size.
+#' The efficacy is defined as `VE = 1 - odds ratio`, and the function returns expected lower and expected upper confidence interval limit
+#' for both absolute and relative VE.
+#'
+#' @param anticipated_VE_for_each_brand_and_strain a matrix of vaccine efficacy of each vaccine (row) against each strain (column). Each value must be a real number between 0 and 1.
+#' @param brand_proportions_in_vaccinated a vector denoting the proportion in which vaccines are given in the vaccinated subjects of the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
+#' @param overall_vaccine_coverage the proportion of the study cohort that will be vaccinated. It should be a real number between 0 and 1.
+#' @param proportion_strains_in_unvaccinated_cases a vector of the proportions in which each strain is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
+#' @param controls_per_case the number of controls to be sampled per case in the study cohort. It should be a real number between 0 and Inf.
+#' @param calculate_relative_VE a logical indicating if calculations should also be done for relative vaccine efficacy (default `TRUE`).
+#' @param alpha controls the width `[100*alpha/2, 100*(1 - alpha/2)]%` of the confidence interval. It is a numeric that must take a value between 0 and 1.
+#' @param confounder_adjustment_Rsquared we use this parameter to adjust the calculations for potential confounders using the methodology proposed by Hsieh and Lavori (2000). It represents the amount of variance (R^2) explained in a regression model where vaccination status is the outcome and confounders of interest are predictors. It is a numeric that must take a value between 0 (no adjustment for confounders) and 1.
+#' @param prob_missing_data to adjust the calculations for non-informative and random subject loss to follow-up/dropout. it should take a numeric value between 0 and 1.
+#' @param total_cases a vector of the number of cases in our cohort for which calculations should be done.
+#' @param nsims total number of Monte Carlo simulations conducted.
+#'
+#' In this function efficacy is defined as `VE = 1 - odds ratio`, where 'odds ratio' is
+#' the ratio of odds of being vaccinated with a particular vaccine versus being unvaccinated among cases and the same odds in controls.
+#' When the groups being compared are a particular vaccine versus placebo then we call the VE
+#' as the absolute VE of the vaccine. For `M` vaccines there are `M` absolute VE, one each for the `M` vaccines.
+#' When the groups being compared are a particular vaccine versus another vaccine then we call the VE
+#' as the relative VE of the vaccines, for a particular strain. For `M` vaccines and `I` strains there are `I x 2 x utils::combn(M, 2)`
+#' permutations of relative VE of two vaccines against the same strain.
+#'
+#' We first transform the user inputs for `I` strains and `M` vaccines into two conditional tables, one for cases, and another for controls.
+#' First an `I x (M + 1)` cross table of the probability of being unvaccinated or vaccinated with a vaccine, given that the subject is a case. The sum of the cells of this cases table is equal to 1.
+#' Second a `1 x (M + 1)` vector of the probability of being unvaccinated or vaccinated with a vaccine, given that the subject is a controls. The sum of this controls vector is equal to 1.
+#' The first column in both of these corresponds to subjects who are unvaccinated and the remaining `M` columns correspond to subjects who are vaccinated with a particular vaccine.
+#'
+#' The next step is to simulate the data. To speed up our computations we sample an `I x (M + 1)`
+#' cross table of cases data from a multinomial distribution with probabilities taken from our cases table.
+#' The total cases sampled in the cross table are are `total_cases * (1 - prob_missing_data)`.
+#' We also sample a vector of `1 x (M + 1)` controls data from a multinomial distribution with probabilities taken from our controls vector.
+#' The total controls sampled in the cross table are are `controls_per_case * total_cases * (1 - prob_missing_data)`.
+#' We then estimate the absolute and relative VE of each vaccine using odds ration based on the sampled data.
+#' The confidence intervals with widths `[100*alpha/2, 100*(1 - alpha/2)]%` are obtained using normal approximation
+#' to the distribution of log of odds ratio (Morris and Gardner, 1988).
+#' To adjust for confounders, the standard-error used in the confidence interval is rescaled to `SE/(1 - confounder_adjustment_Rsquared)` (Hsieh and Lavori, 2000)
+#' We repeat this procedure `nsims` times, and in each such simulation we obtain `nsims` confidence intervals.
+#'
+#' To conduct simulations faster all the calculations are done without using for loops.
+#' Instead we use a three-dimensional R arrays, with one-dimension for `nsims`,
+#' another for the sample size vector `total_cases`,
+#' and another for a vector containing the flattened cross table of simulated data on cases and controls.
+#'
+#' @return A data frame consisting of the input parameters, absolute and relative VE combinations,
+#' and the expected lower and expected upper width of the confidence intervals for each absolute and relative VE combination.
+#'
+#' @examples As an example we recommend running the function without passing any parameter to it.
+#' The default scenario is for three vaccines and three pathogen strains.
+#'
+#' @references
+#' 1. Hsieh, F. Y., & Lavori, P. W. (2000). Sample-size calculations for the Cox proportional hazards regression model with nonbinary covariates. Controlled clinical trials, 21(6), 552-560.
+#' 2. Morris, J. A., & Gardner, M. J. (1988). Statistics in medicine: Calculating confidence intervals for relative risks (odds ratios) and standardised ratios and rates. British medical journal (Clinical research ed.), 296(6632), 1313.
 #' @importFrom utils combn
 #' @export
 get_casecontrol_expectedCI_VE_or = function(anticipated_VE_for_each_brand_and_strain=

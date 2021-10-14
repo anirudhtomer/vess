@@ -5,11 +5,10 @@ Authors@R:
     person(given = "Anirudh",
            family = "Tomer",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
+           email = "anirudh.tomer@p-95.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: An R Package for Vaccine Efficacy Sample Size Calculations in a Multiple Vaccine and Multiple Pathogen Variant Scenario
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+License: MIT + file
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
