@@ -2,16 +2,16 @@
 % Please edit documentation in R/get_casecontrol_mindet_VE_or.R
 \name{get_casecontrol_mindet_VE_or}
 \alias{get_casecontrol_mindet_VE_or}
-\title{Minimum detectable strain and vaccine-specific efficacy based on odds ratio.}
+\title{Minimum detectable variant and vaccine-specific efficacy based on odds ratio.}
 \usage{
 get_casecontrol_mindet_VE_or(
-  anticipated_VE_for_each_brand_and_strain = matrix(data = c(0.8, 0.5, 0.3, 0.3, 0.5,
+  anticipated_VE_for_each_brand_and_variant = matrix(data = c(0.8, 0.5, 0.3, 0.3, 0.5,
     0.8, 0.9, 0.5, 1), nrow = 3, ncol = 3, byrow = F, dimnames = list(paste0("brand",
-    1:3), paste0("strain", 1:3))),
+    1:3), paste0("variant", 1:3))),
   brand_proportions_in_vaccinated = c(brand1 = 0.3, brand2 = 0.5, brand3 = 0.2),
   overall_vaccine_coverage = 0.3,
-  proportion_strains_in_unvaccinated_cases = c(strain1 = 0.6, strain2 = 0.3, strain3 =
-    0.1),
+  proportion_variants_in_unvaccinated_cases = c(variant1 = 0.6, variant2 = 0.3,
+    variant3 = 0.1),
   controls_per_case = 2,
   calculate_relative_VE = T,
   power = 0.8,
@@ -22,13 +22,13 @@ get_casecontrol_mindet_VE_or(
 )
 }
 \arguments{
-\item{anticipated_VE_for_each_brand_and_strain}{a matrix of vaccine efficacy of each vaccine (row) against each strain (column). Each value must be a real number between 0 and 1.}
+\item{anticipated_VE_for_each_brand_and_variant}{a matrix of vaccine efficacy of each vaccine (row) against each variant (column). Each value must be a real number between 0 and 1.}
 
 \item{brand_proportions_in_vaccinated}{a vector denoting the proportion in which vaccines are given in the vaccinated subjects of the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.}
 
 \item{overall_vaccine_coverage}{the proportion of the study cohort that will be vaccinated. It should be a real number between 0 and 1.}
 
-\item{proportion_strains_in_unvaccinated_cases}{a vector of the proportions in which each strain is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.}
+\item{proportion_variants_in_unvaccinated_cases}{a vector of the proportions in which each variant is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.}
 
 \item{controls_per_case}{the number of controls to be sampled per case in the study cohort. It should be a real number between 0 and Inf.}
 
@@ -49,7 +49,7 @@ A data frame consisting of the input parameters, absolute and relative VE combin
 and the minimum detectable VE for each absolute and relative VE combination.
 }
 \description{
-The function \code{get_cohort_mindet_VE_or} calculates the minimum detectable strain and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
+The function \code{get_cohort_mindet_VE_or} calculates the minimum detectable variant and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
 The efficacy is defined as \verb{VE = 1 - odds ratio}, and the function returns
 both absolute and relative minimum detectable VE. The NULL hypothesis is that \code{VE = 0} and
 the alternate hypothesis in that \verb{VE is not equal to 0}.
@@ -60,21 +60,21 @@ the ratio of odds of being vaccinated with a particular vaccine versus being unv
 When the groups being compared are a particular vaccine versus placebo then we call the VE
 as the absolute VE of the vaccine. For \code{M} vaccines there are \code{M} absolute VE, one each for the \code{M} vaccines.
 When the groups being compared are a particular vaccine versus another vaccine then we call the VE
-as the relative VE of the vaccines, for a particular strain. For \code{M} vaccines and \code{I} strains there are \verb{I x 2 x utils::combn(M, 2)}
-permutations of relative VE of two vaccines against the same strain.
+as the relative VE of the vaccines, for a particular variant. For \code{M} vaccines and \code{I} variants there are \verb{I x 2 x utils::combn(M, 2)}
+permutations of relative VE of two vaccines against the same variant.
 
-We first transform the user inputs for \code{I} strains and \code{M} vaccines into two conditional tables, one for cases, and another for controls.
+We first transform the user inputs for \code{I} variants and \code{M} vaccines into two conditional tables, one for cases, and another for controls.
 First an \verb{I x (M + 1)} cross table of the probability of being unvaccinated or vaccinated with a vaccine, given that the subject is a case. The sum of the cells of this cases table is equal to 1.
 Second a \verb{1 x (M + 1)} vector of the probability of being unvaccinated or vaccinated with a vaccine, given that the subject is a controls. The sum of this controls vector is equal to 1.
 The first column in both of these corresponds to subjects who are unvaccinated and the remaining \code{M} columns correspond to subjects who are vaccinated with a particular vaccine.
 
-In general, while calculating minimum detectable VE it is not necessary to ask for \code{anticipated_VE_for_each_brand_and_strain}.
-The reason we need it in the multiple variant and mulitple vaccine scenario is explained next.
+In general, while calculating minimum detectable VE it is not necessary to ask for \code{anticipated_VE_for_each_brand_and_variant}.
+The reason we need it in the multiple variant and multiple vaccine scenario is explained next.
 
 After we obtain the cases table and controls vector our next step is to calculate the minimum detectable VE for each absolute and relative VE combination.
 For absolute VE we extract a \verb{1 x 2} vector of probabilities of being a control larger \verb{1 x (M + 1)} controls vector. The two columns are for the vaccine of interest and placebo.
 We also extract a \verb{1 x 2} vector of probabilities of being a case from the larger \verb{I x (M + 1)} controls vector.
-The row is the row corresponding to the strain of interest and the two columns are for the vaccine of interest and placebo.
+The row is the row corresponding to the variant of interest and the two columns are for the vaccine of interest and placebo.
 The effective vaccine coverage is then rescaled probability of being vaccinated in the selected \verb{1 x 2} controls vector.
 The effective number of cases are \code{total_cases * sub_cases_vector_probability_sum * (1 - prob_missing_data) * (1 - confounder_adjustment_Rsquared)}.
 Here \code{sub_cases_vector_probability_sum} is the sum of the cells of the \verb{1 x 2} sub vector of cases.
@@ -86,7 +86,7 @@ the columns are two vaccines of interest.
 }
 \examples{
 As an example we recommend running the function without passing any parameter to it.
-The default scenario is for three vaccines and three pathogen strains.
+The default scenario is for three vaccines and three pathogen variants.
 
 }
 \references{

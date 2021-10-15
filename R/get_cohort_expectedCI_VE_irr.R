@@ -1,12 +1,12 @@
-#' Expected lower and expected upper limit of the confidence intervals of strain and vaccine-specific efficacy based on incidence rate ratio.
+#' Expected lower and expected upper limit of the confidence intervals of variant and vaccine-specific efficacy based on incidence rate ratio.
 #' @description
-#' The function `get_cohort_expectedCI_VE_irr` simulates confindence intervals for strain and vaccine-specific efficacy (VE) for a given sample size.
+#' The function `get_cohort_expectedCI_VE_irr` simulates confindence intervals for variant and vaccine-specific efficacy (VE) for a given sample size.
 #' The efficacy is defined as `VE = 1 - incidence rate ratio`, and the function returns expected lower and expected upper confidence interval limit for both absolute and relative VE.
 #'
-#' @param anticipated_VE_for_each_brand_and_strain a matrix of vaccine efficacy of each vaccine (row)  against each strain (column). Each value must be a real number between 0 and 1.
+#' @param anticipated_VE_for_each_brand_and_variant a matrix of vaccine efficacy of each vaccine (row)  against each variant (column). Each value must be a real number between 0 and 1.
 #' @param brand_proportions_in_vaccinated a vector denoting the proportion in which vaccines are given in the vaccinated subjects of the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
 #' @param overall_vaccine_coverage the proportion of the study cohort that will be vaccinated. It should be a real number between 0 and 1.
-#' @param proportion_strains_in_unvaccinated_cases a vector of the proportions in which each strain is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
+#' @param proportion_variants_in_unvaccinated_cases a vector of the proportions in which each variant is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
 #' @param overall_attack_rate_in_unvaccinated the proportion of the study cohort that is expected to infected over the study period. It should be a real number between 0 and 1.
 #' @param study_period the study period (epochs) should be numeric value greater than 0.
 #' @param calculate_relative_VE a logical indicating if calculations should also be done for relative vaccine efficacy (default `TRUE`).
@@ -18,19 +18,19 @@
 #'
 #' @details
 #' #' In this function efficacy is defined as `VE = 1 - incidence rate ratio`, where 'incidence rate ratio' is
-#' the ratio of incidence rates of being a case of a particular strain/variant among the groups being compared.
+#' the ratio of incidence rates of being a case of a particular variant/variant among the groups being compared.
 #' When the groups being compared are a particular vaccine versus placebo then we call the VE
 #' as the absolute VE of the vaccine. For `M` vaccines there are `M` absolute VE, one each for the `M` vaccines.
 #' When the groups being compared are a particular vaccine versus another vaccine then we call the VE
-#' as the relative VE of the vaccines, for a particular strain. For `M` vaccines and `I` strains there are `I x 2 x utils::combn(M, 2)`
-#' permutations of relative VE of two vaccines against the same strain.
+#' as the relative VE of the vaccines, for a particular variant. For `M` vaccines and `I` variants there are `I x 2 x utils::combn(M, 2)`
+#' permutations of relative VE of two vaccines against the same variant.
 #'
-#' We first transform the user inputs for `I` strains and `M` vaccines into a `(I + 1) x (M + 1)` cross table of
+#' We first transform the user inputs for `I` variants and `M` vaccines into a `(I + 1) x (M + 1)` cross table of
 #' cumulative-incidences of being a case or a control over the study period. The overall sum of all cumulative-incidences,
 #' i.e., all cells, of this table is 1. The first row of our cumulative-incidence table contain cumulative-incidence of being a control.
 #' The first column corresponds to subjects who are unvaccinated.
-#' Thus, the cell `{1,1}` contains the probabitity (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
-#' The remaining `Ì` rows correspond to subjects who are cases of a particular strain/variant of the pathogen,
+#' Thus, the cell `{1,1}` contains the probability (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
+#' The remaining `Ì` rows correspond to subjects who are cases of a particular variant/variant of the pathogen,
 #' and the remaining `M` columns correspond to subjects who are vaccinated with a particular vaccine.
 #' The next step is to simulate the data. To speed up our computations we sample an `(I + 1) x (M + 1)`
 #' cross table of data from a multinomial distribution with probabilities taken from our cumulative-incidence table.
@@ -40,18 +40,18 @@
 #' The denominator is person-time contributed by subjects vaccinated with a particular vaccine (or placebo).
 #' Hence, in addition to the table of cumulative-incidences, using the user input we also obtain a `I x (M + 1)` table of incidence rates.
 #' We use this table to calculate the person-time contribution of subjects over `study_period`.
-#' In this table each cell contains the incidence rate of being a case of a particular strain given their vaccination status.
+#' In this table each cell contains the incidence rate of being a case of a particular variant given their vaccination status.
 #' The naive method to calculate the overall person-time contribution of subjects vaccinated with a particular vaccine is to
 #' simulate event-time of each subject using an exponential distribution (R function rexp). Subsequently, one can add them up over the subjects.
 #' But this is computationally very slow. Hence we instead exploit the central limit theorem to directly sample the
 #' 'sum of the person-time of all subjects with a certain vaccination status'.
 #' For this, assume that the `study_period=t` and the sum of the event rates
-#' for `I` strains is `p = p1 + p2 + ... + pI` per unit time, where `p1, p2, ..., pI` are the individual
-#' event rates of the `I` strains. Then `exp(-pt)%` subjects will not be infected with the strain
+#' for `I` variants is `p = p1 + p2 + ... + pI` per unit time, where `p1, p2, ..., pI` are the individual
+#' event rates of the `I` variants. Then `exp(-pt)%` subjects will not be infected with the variant
 #' and contribute `t` units time each. The remaining `100 - exp(-pt)%` subjects will
 #' obtain the event and individually contribute an event time whose sum can be directly sampled from a
 #' normal distribution (central limit theorem). This is because the sum of event times of `K`
-#' eventful subjects follows a normal distributon with mean equal to
+#' eventful subjects follows a normal distribution with mean equal to
 #' `K x mean of a truncated exponential distribution in the interval` `[0, t]`
 #' and variance equal to the `K x variance of a truncated exponential distribution in the interval` `[0, t]`.
 #'
@@ -74,13 +74,13 @@
 #' @importFrom matrixStats colCumsums
 #' @importFrom utils combn
 #' @export
-get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain=
+get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_variant=
                                               matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1), nrow = 3, ncol = 3, byrow = F,
-                                                     dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
+                                                     dimnames = list(paste0('brand', 1:3), paste0('variant', 1:3))),
                                             brand_proportions_in_vaccinated =
                                               c('brand1'=0.3, 'brand2'=0.5, 'brand3'=0.2),
                                             overall_vaccine_coverage=0.3,
-                                            proportion_strains_in_unvaccinated_cases = c('strain1'=0.6, 'strain2'=0.3, 'strain3'=0.1),
+                                            proportion_variants_in_unvaccinated_cases = c('variant1'=0.6, 'variant2'=0.3, 'variant3'=0.1),
                                             overall_attack_rate_in_unvaccinated = 0.1,
                                             study_period=1,
                                             calculate_relative_VE = T,
@@ -90,16 +90,16 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
                                             total_subjects=seq(1000, 10000, 25),
                                             nsims = 500){
 
-  check_input(anticipated_VE_for_each_brand_and_strain, brand_proportions_in_vaccinated, proportion_strains_in_unvaccinated_cases)
+  check_input(anticipated_VE_for_each_brand_and_variant, brand_proportions_in_vaccinated, proportion_variants_in_unvaccinated_cases)
 
   total_vaccine_brands = length(brand_proportions_in_vaccinated)
-  total_case_strains = length(proportion_strains_in_unvaccinated_cases)
+  total_case_variants = length(proportion_variants_in_unvaccinated_cases)
 
-  relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
+  relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_variants, calculate_relative_VE)
 
-  all_tables = get_cohort_full_table_irr(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
+  all_tables = get_cohort_full_table_irr(anticipated_VE_for_each_brand_and_variant, overall_vaccine_coverage,
                                          overall_attack_rate_in_unvaccinated, study_period,
-                                         proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
+                                         proportion_variants_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
   #c(full_table) converts the table into a vector, going column by column
   flat_full_table_prob = c(all_tables$full_table_prob)
@@ -109,7 +109,7 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
   missing_data_adjusted_total_subjects = round(total_subjects * (1-prob_missing_data))
 
   cell_counts_sims = array(data = do.call('cbind', lapply(missing_data_adjusted_total_subjects, rmultinom, n=nsims, prob=flat_full_table_prob)),
-                           dim = c((1+total_vaccine_brands)*(1+total_case_strains), nsims, total_total_subject_settings))
+                           dim = c((1+total_vaccine_brands)*(1+total_case_variants), nsims, total_total_subject_settings))
 
   trunc_exp_means = trunc_exp_mean(event_rate = flat_overall_event_rates, trunc_limit = study_period)
   trunc_exp_vars = trunc_exp_var(event_rate = flat_overall_event_rates, trunc_limit = study_period)
@@ -119,17 +119,17 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
   trunc_exp_vars[is.nan(trunc_exp_vars)] = 0
 
   CONTROL_ROW = 1
-  CONTROL_INDICES = CONTROL_ROW + (0:total_vaccine_brands)*(total_case_strains+1)
+  CONTROL_INDICES = CONTROL_ROW + (0:total_vaccine_brands)*(total_case_variants+1)
   #cell_counts_sims[CONTROL_INDICES,,,drop=F] is the counts per vaccine among controls
   person_time_sims = cell_counts_sims[CONTROL_INDICES,,,drop=F] * study_period
 
-  #summarizing the counts per vaccine among cases. so want to add over all strains per vaccine
+  #summarizing the counts per vaccine among cases. so want to add over all variants per vaccine
   cases_counts_sims = array(
     c(
       apply(cell_counts_sims[-CONTROL_INDICES,,,drop=F], c(3), function(x){
         cumsum_overall = rbind(0,colCumsums(x))
-        a = seq(1, nrow(x), by = total_case_strains)
-        b = seq(total_case_strains, nrow(x), by = total_case_strains)
+        a = seq(1, nrow(x), by = total_case_variants)
+        b = seq(total_case_variants, nrow(x), by = total_case_variants)
         return(cumsum_overall[b + 1,] - cumsum_overall[a,])
       })
     ),
@@ -140,7 +140,7 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
   cases_person_time_sum_sd = sqrt(cases_counts_sims * trunc_exp_vars)
 
   #the pmax is because rnorm can also sample negative person-time
-  #think about event rate zero against a strain: person time should be study period
+  #think about event rate zero against a variant: person time should be study period
   person_time_sims = person_time_sims + array(
     data = pmax(
       rnorm(
@@ -157,9 +157,9 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
 
   UNVACCINATED_EVENTS_ROW = 1
 
-  brand1_total_events_indices = relative_VE_combn[BRAND1,]*(1 + total_case_strains) + relative_VE_combn[STRAIN,] + CONTROL_ROW
+  brand1_total_events_indices = relative_VE_combn[BRAND1,]*(1 + total_case_variants) + relative_VE_combn[VARIANT,] + CONTROL_ROW
   brand1_person_time_indices = relative_VE_combn[BRAND1,] + UNVACCINATED_EVENTS_ROW
-  brand2_total_events_indices = relative_VE_combn[BRAND2,]*(1 + total_case_strains) + relative_VE_combn[STRAIN,] + CONTROL_ROW
+  brand2_total_events_indices = relative_VE_combn[BRAND2,]*(1 + total_case_variants) + relative_VE_combn[VARIANT,] + CONTROL_ROW
   brand2_person_time_indices = relative_VE_combn[BRAND2,] + UNVACCINATED_EVENTS_ROW
 
   #dimensions of the following are ncol(relative_VE_combn) x nsims
@@ -191,7 +191,7 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
                    vaccine_2 = rep(ifelse(relative_VE_combn[BRAND2,]==0,
                                           no = paste("Brand", relative_VE_combn[BRAND2,]),
                                           yes = "Unvaccinated"), total_total_subject_settings),
-                   strain = rep(paste("Strain", relative_VE_combn[STRAIN,]), total_total_subject_settings),
+                   variant = rep(paste("Variant", relative_VE_combn[VARIANT,]), total_total_subject_settings),
                    total_subjects = rep(total_subjects, each=ncol(relative_VE_combn)),
                    anticipated_VE = anticipated_VE,
                    expected_VE = c(expected_VE),
@@ -208,8 +208,8 @@ get_cohort_expectedCI_VE_irr = function(anticipated_VE_for_each_brand_and_strain
   ret = cbind(ret,
               t(data.frame(brand_proportions_in_vaccinated,
                            row.names = paste0('brand_prop_', 1:total_vaccine_brands))),
-              t(data.frame(proportion_strains_in_unvaccinated_cases,
-                           row.names = paste0('strain_prop_', 1:total_case_strains))))
+              t(data.frame(proportion_variants_in_unvaccinated_cases,
+                           row.names = paste0('variant_prop_', 1:total_case_variants))))
 
   return(ret)
 }

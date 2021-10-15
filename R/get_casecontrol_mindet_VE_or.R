@@ -1,14 +1,14 @@
-#' Minimum detectable strain and vaccine-specific efficacy based on odds ratio.
+#' Minimum detectable variant and vaccine-specific efficacy based on odds ratio.
 #' @description
-#' The function `get_cohort_mindet_VE_or` calculates the minimum detectable strain and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
+#' The function `get_cohort_mindet_VE_or` calculates the minimum detectable variant and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
 #' The efficacy is defined as `VE = 1 - odds ratio`, and the function returns
 #' both absolute and relative minimum detectable VE. The NULL hypothesis is that `VE = 0` and
 #' the alternate hypothesis in that `VE is not equal to 0`.
 #'
-#' @param anticipated_VE_for_each_brand_and_strain a matrix of vaccine efficacy of each vaccine (row) against each strain (column). Each value must be a real number between 0 and 1.
+#' @param anticipated_VE_for_each_brand_and_variant a matrix of vaccine efficacy of each vaccine (row) against each variant (column). Each value must be a real number between 0 and 1.
 #' @param brand_proportions_in_vaccinated a vector denoting the proportion in which vaccines are given in the vaccinated subjects of the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
 #' @param overall_vaccine_coverage the proportion of the study cohort that will be vaccinated. It should be a real number between 0 and 1.
-#' @param proportion_strains_in_unvaccinated_cases a vector of the proportions in which each strain is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
+#' @param proportion_variants_in_unvaccinated_cases a vector of the proportions in which each variant is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.
 #' @param controls_per_case the number of controls to be sampled per case in the study cohort. It should be a real number between 0 and Inf.
 #' @param calculate_relative_VE a logical indicating if calculations should also be done for relative vaccine efficacy (default `TRUE`).
 #' @param power the power to detect the VE. It is equal to 1 - Type-II error. It is a numeric that must take a value between 0 and 1.
@@ -23,21 +23,21 @@
 #' When the groups being compared are a particular vaccine versus placebo then we call the VE
 #' as the absolute VE of the vaccine. For `M` vaccines there are `M` absolute VE, one each for the `M` vaccines.
 #' When the groups being compared are a particular vaccine versus another vaccine then we call the VE
-#' as the relative VE of the vaccines, for a particular strain. For `M` vaccines and `I` strains there are `I x 2 x utils::combn(M, 2)`
-#' permutations of relative VE of two vaccines against the same strain.
+#' as the relative VE of the vaccines, for a particular variant. For `M` vaccines and `I` variants there are `I x 2 x utils::combn(M, 2)`
+#' permutations of relative VE of two vaccines against the same variant.
 #'
-#' We first transform the user inputs for `I` strains and `M` vaccines into two conditional tables, one for cases, and another for controls.
+#' We first transform the user inputs for `I` variants and `M` vaccines into two conditional tables, one for cases, and another for controls.
 #' First an `I x (M + 1)` cross table of the probability of being unvaccinated or vaccinated with a vaccine, given that the subject is a case. The sum of the cells of this cases table is equal to 1.
 #' Second a `1 x (M + 1)` vector of the probability of being unvaccinated or vaccinated with a vaccine, given that the subject is a controls. The sum of this controls vector is equal to 1.
 #' The first column in both of these corresponds to subjects who are unvaccinated and the remaining `M` columns correspond to subjects who are vaccinated with a particular vaccine.
 #'
-#' In general, while calculating minimum detectable VE it is not necessary to ask for `anticipated_VE_for_each_brand_and_strain`.
-#' The reason we need it in the multiple variant and mulitple vaccine scenario is explained next.
+#' In general, while calculating minimum detectable VE it is not necessary to ask for `anticipated_VE_for_each_brand_and_variant`.
+#' The reason we need it in the multiple variant and multiple vaccine scenario is explained next.
 #'
 #' After we obtain the cases table and controls vector our next step is to calculate the minimum detectable VE for each absolute and relative VE combination.
 #' For absolute VE we extract a `1 x 2` vector of probabilities of being a control larger `1 x (M + 1)` controls vector. The two columns are for the vaccine of interest and placebo.
 #' We also extract a `1 x 2` vector of probabilities of being a case from the larger `I x (M + 1)` controls vector.
-#' The row is the row corresponding to the strain of interest and the two columns are for the vaccine of interest and placebo.
+#' The row is the row corresponding to the variant of interest and the two columns are for the vaccine of interest and placebo.
 #' The effective vaccine coverage is then rescaled probability of being vaccinated in the selected `1 x 2` controls vector.
 #' The effective number of cases are `total_cases * sub_cases_vector_probability_sum * (1 - prob_missing_data) * (1 - confounder_adjustment_Rsquared)`.
 #' Here `sub_cases_vector_probability_sum` is the sum of the cells of the `1 x 2` sub vector of cases.
@@ -51,7 +51,7 @@
 #' and the minimum detectable VE for each absolute and relative VE combination.
 #'
 #' @examples As an example we recommend running the function without passing any parameter to it.
-#' The default scenario is for three vaccines and three pathogen strains.
+#' The default scenario is for three vaccines and three pathogen variants.
 #'
 #' @references
 #' 1. Hsieh, F. Y., & Lavori, P. W. (2000). Sample-size calculations for the Cox proportional hazards regression model with nonbinary covariates. Controlled clinical trials, 21(6), 552-560.
@@ -59,13 +59,13 @@
 #' @importFrom epiR epi.sscc
 #' @importFrom utils combn
 #' @export
-get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain=
+get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_variant=
                                           matrix(data=c(0.8, 0.5, 0.3, 0.3, 0.5, 0.8, 0.9, 0.5, 1), nrow = 3, ncol = 3, byrow = F,
-                                                 dimnames = list(paste0('brand', 1:3), paste0('strain', 1:3))),
+                                                 dimnames = list(paste0('brand', 1:3), paste0('variant', 1:3))),
                                         brand_proportions_in_vaccinated =
                                           c('brand1'=0.3, 'brand2'=0.5, 'brand3'=0.2),
                                         overall_vaccine_coverage=0.3,
-                                        proportion_strains_in_unvaccinated_cases = c('strain1'=0.6, 'strain2'=0.3, 'strain3'=0.1),
+                                        proportion_variants_in_unvaccinated_cases = c('variant1'=0.6, 'variant2'=0.3, 'variant3'=0.1),
                                         controls_per_case=2,
                                         calculate_relative_VE=T,
                                         power=0.8,
@@ -74,12 +74,12 @@ get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain
                                         prob_missing_data = 0.1,
                                         total_cases=seq(50,500, 10)){
 
-  check_input(anticipated_VE_for_each_brand_and_strain, brand_proportions_in_vaccinated, proportion_strains_in_unvaccinated_cases)
+  check_input(anticipated_VE_for_each_brand_and_variant, brand_proportions_in_vaccinated, proportion_variants_in_unvaccinated_cases)
 
   total_vaccine_brands = length(brand_proportions_in_vaccinated)
-  total_case_strains = length(proportion_strains_in_unvaccinated_cases)
+  total_case_variants = length(proportion_variants_in_unvaccinated_cases)
 
-  relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_strains, calculate_relative_VE)
+  relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_variants, calculate_relative_VE)
 
   total_total_case_settings = length(total_cases)
   missing_data_adjusted_total_cases = round(total_cases * (1-prob_missing_data))
@@ -88,26 +88,27 @@ get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain
   CONTROL_COL = 1
   UNVACCINATED_ROW = 1
 
-  case_control_full_tables = get_case_control_full_tables(anticipated_VE_for_each_brand_and_strain, overall_vaccine_coverage,
-                                                          proportion_strains_in_unvaccinated_cases, brand_proportions_in_vaccinated)
+  case_control_full_tables = get_case_control_full_tables(anticipated_VE_for_each_brand_and_variant, overall_vaccine_coverage,
+                                                          proportion_variants_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
-  full_table = cbind(case_control_full_tables$full_vector_controls, case_control_full_tables$full_table_cases)
+  full_table = cbind(case_control_full_tables$conditional_vector_controls, case_control_full_tables$full_table_cases)
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, FUN = function(comparison_set){
-    strain_index = comparison_set[STRAIN] + CONTROL_COL
+    browser()
+    variant_index = comparison_set[VARIANT] + CONTROL_COL
     vaccine1_index = comparison_set[BRAND1] + UNVACCINATED_ROW
     vaccine2_index = comparison_set[BRAND2] + UNVACCINATED_ROW
 
     control_probs = full_table[c(vaccine1_index, vaccine2_index), CONTROL_COL]
-    case_probs = full_table[c(vaccine1_index, vaccine2_index), strain_index]
+    case_probs = full_table[c(vaccine1_index, vaccine2_index), variant_index]
 
     coverage_subpopulation = control_probs[1] / sum(control_probs)
 
     if(comparison_set[BRAND2] == 0){
       or_index = 1
     }else{
-      anticipated_VEs = anticipated_VE_for_each_brand_and_strain[comparison_set[c(BRAND1, BRAND2)],
-                                                                 comparison_set[STRAIN]]
+      anticipated_VEs = anticipated_VE_for_each_brand_and_variant[comparison_set[c(BRAND1, BRAND2)],
+                                                                 comparison_set[VARIANT]]
       #irr index 1 is lower limit of incidence rate ratio and to be chosen when VE is 0 to 100%
       #irr index 2 is upper limit of incidence rate ratio and to be chosen when VE is between -100% and 0%
       or_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
@@ -134,7 +135,7 @@ get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain
                    vaccine_2 = rep(ifelse(relative_VE_combn[BRAND2,]==0,
                                           no = paste("Brand", relative_VE_combn[BRAND2,]),
                                           yes = "Unvaccinated"), total_total_case_settings),
-                   strain = rep(paste("Strain", relative_VE_combn[STRAIN,]), total_total_case_settings),
+                   variant = rep(paste("Variant", relative_VE_combn[VARIANT,]), total_total_case_settings),
                    total_cases = rep(total_cases, each=ncol(relative_VE_combn)),
                    mindet_VE = c(mindet_VE),
                    alpha = alpha,
@@ -148,8 +149,8 @@ get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_strain
   ret = cbind(ret,
               t(data.frame(brand_proportions_in_vaccinated,
                            row.names = paste0('brand_prop_', 1:total_vaccine_brands))),
-              t(data.frame(proportion_strains_in_unvaccinated_cases,
-                           row.names = paste0('strain_prop_', 1:total_case_strains))))
+              t(data.frame(proportion_variants_in_unvaccinated_cases,
+                           row.names = paste0('variant_prop_', 1:total_case_variants))))
 
   return(ret)
 }

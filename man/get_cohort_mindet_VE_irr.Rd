@@ -2,16 +2,16 @@
 % Please edit documentation in R/get_cohort_mindet_VE_irr.R
 \name{get_cohort_mindet_VE_irr}
 \alias{get_cohort_mindet_VE_irr}
-\title{Minimum detectable strain and vaccine-specific efficacy based on incidence rate ratio.}
+\title{Minimum detectable variant and vaccine-specific efficacy based on incidence rate ratio.}
 \usage{
 get_cohort_mindet_VE_irr(
-  anticipated_VE_for_each_brand_and_strain = matrix(data = c(0.1, 0.2, 0.3, 0.4, 0.5,
+  anticipated_VE_for_each_brand_and_variant = matrix(data = c(0.1, 0.2, 0.3, 0.4, 0.5,
     0.6, 0.7, 0.8, 1), nrow = 3, ncol = 3, byrow = F, dimnames = list(paste0("brand",
-    1:3), paste0("strain", 1:3))),
+    1:3), paste0("variant", 1:3))),
   brand_proportions_in_vaccinated = c(brand1 = 0.3, brand2 = 0.5, brand3 = 0.2),
   overall_vaccine_coverage = 0.3,
-  proportion_strains_in_unvaccinated_cases = c(strain1 = 0.6, strain2 = 0.3, strain3 =
-    0.1),
+  proportion_variants_in_unvaccinated_cases = c(variant1 = 0.6, variant2 = 0.3,
+    variant3 = 0.1),
   overall_attack_rate_in_unvaccinated = 0.1,
   study_period = 1,
   calculate_relative_VE = T,
@@ -23,13 +23,13 @@ get_cohort_mindet_VE_irr(
 )
 }
 \arguments{
-\item{anticipated_VE_for_each_brand_and_strain}{a matrix of vaccine efficacy of each vaccine (row)  against each strain (column). Each value must be a real number between 0 and 1.}
+\item{anticipated_VE_for_each_brand_and_variant}{a matrix of vaccine efficacy of each vaccine (row)  against each variant (column). Each value must be a real number between 0 and 1.}
 
 \item{brand_proportions_in_vaccinated}{a vector denoting the proportion in which vaccines are given in the vaccinated subjects of the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.}
 
 \item{overall_vaccine_coverage}{the proportion of the study cohort that will be vaccinated. It should be a real number between 0 and 1.}
 
-\item{proportion_strains_in_unvaccinated_cases}{a vector of the proportions in which each strain is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.}
+\item{proportion_variants_in_unvaccinated_cases}{a vector of the proportions in which each variant is expected to be present in the unvaccinated and infected subjects in the study cohort. Each value of this vector must be a real number between 0 and 1 and the sum of the values of this vector must be equal to 1.}
 
 \item{overall_attack_rate_in_unvaccinated}{the proportion of the study cohort that is expected to infected over the study period. It should be a real number between 0 and 1.}
 
@@ -52,52 +52,51 @@ A data frame consisting of the input parameters, absolute and relative VE combin
 and the minimum detectable VE for each absolute and relative VE combination.
 }
 \description{
-The function \code{get_cohort_mindet_VE_irr} calculates the minimum detectable strain and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
+The function \code{get_cohort_mindet_VE_irr} calculates the minimum detectable variant and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
 The efficacy is defined as \verb{VE = 1 - incidence rate ratio}, and the function returns
 both absolute and relative minimum detectable VE. The NULL hypothesis is that \code{VE = 0} and
 the alternate hypothesis in that \verb{VE is not equal to 0}.
 }
 \details{
 In this function efficacy is defined as \verb{VE = 1 - incidence rate ratio}, where 'incidence rate ratio' is
-the ratio of incidence rates of being a case of a particular strain/variant among the groups being compared.
+the ratio of incidence rates of being a case of a particular variant/variant among the groups being compared.
 When the groups being compared are a particular vaccine versus placebo then we call the VE
 as the absolute VE of the vaccine. For \code{M} vaccines there are \code{M} absolute VE, one each for the \code{M} vaccines.
 When the groups being compared are a particular vaccine versus another vaccine then we call the VE
-as the relative VE of the vaccines, for a particular strain. For \code{M} vaccines and \code{I} strains there are \verb{I x 2 x utils::combn(M, 2)}
-permutations of relative VE of two vaccines against the same strain.
+as the relative VE of the vaccines, for a particular variant. For \code{M} vaccines and \code{I} variants there are \verb{I x 2 x utils::combn(M, 2)}
+permutations of relative VE of two vaccines against the same variant.
 
-We first transform the user inputs for \code{I} strains and \code{M} vaccines into a \verb{(I + 1) x (M + 1)} cross table of
+We first transform the user inputs for \code{I} variants and \code{M} vaccines into a \verb{(I + 1) x (M + 1)} cross table of
 cumulative-incidences of being a case or a control over the study period. The overall sum of all cumulative-incidences,
 i.e., all cells, of this table is 1. The first row of our cumulative-incidence table contain cumulative-incidence of being a control.
 The first column corresponds to subjects who are unvaccinated.
-Thus, the cell \verb{\{1,1\}} contains the probabitity (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
-The remaining \code{Ì} rows correspond to subjects who are cases of a particular strain/variant of the pathogen,
+Thus, the cell \verb{\{1,1\}} contains the probability (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
+The remaining \code{Ì} rows correspond to subjects who are cases of a particular variant/variant of the pathogen,
 and the remaining \code{M} columns correspond to subjects who are vaccinated with a particular vaccine. In the
 person-time based estimator of incidence rates the number of cases only constitute the numerator.
 The denominator is person-time contributed by subjects vaccinated with a particular vaccine (or placebo).
 Hence, in addition to the table of cumulative-incidences, using the user input we also
 obtain a \verb{I x (M + 1)} table of incidence rates.
 
-In general, while calculating minimum detectable VE it is not necessary to ask for \code{anticipated_VE_for_each_brand_and_strain}.
-The reason we need it in the multiple variant and mulitple vaccine scenario is explained next.
+In general, while calculating minimum detectable VE it is not necessary to ask for \code{anticipated_VE_for_each_brand_and_variant}.
+The reason we need it in the multiple variant and multiple vaccine scenario is explained next.
 
 After we obtain the cumulative incidence table our next step is to calculate the minimum detectable VE for each absolute and relative VE combination.
-For absolute VE we extract a \verb{2 x 2} sub-table of cumulative-incidences from the larger \verb{(I + 1) x (M + 1)} cross table of
-cumulative-incidences. The two rows of this table are for the strain of interest and controls.
-The two columns are for the vaccine of interest and placebo. The effective sample size for this sub-table and the absolute VE is then
+For absolute VE we extract a \verb{I x 2} sub-table of cumulative-incidences from the larger \verb{(I + 1) x (M + 1)} cross table of
+cumulative-incidences. The two columns are for the vaccine of interest and placebo. The effective sample size for this sub-table and the absolute VE is then
 \code{total_subjects * sub_table_probability_sum * (1 - prob_missing_data) * (1 - confounder_adjustment_Rsquared)}.
 Here \code{sub_table_probability_sum} is the sum of the cells of the sub_table.
 This sum corresponds to the percentage of the \code{total_subjects} that can be used for a specific absolute VE calculation.
-The effective overall coverage in this sub-table is the rescaled probability of being vaccinated in the \verb{2 x 2} sub-table.
-The effective incidence rate of the strain in this comparison is the strain-specific incidence rate of the strain taken
+The effective overall coverage in this sub-table is the rescaled probability of being vaccinated in the \verb{I x 2} sub-table.
+The effective incidence rate of the variant in this comparison is the variant-specific incidence rate of the variant taken
 from the table of incidence rates.
 We then simply pass these adjusted parameters to the function \code{epi.sscohortt} of the R package \code{epiR} to obtain the minimum detectable absolute VE.
-For relative VE the process is similar to absolute VE, except that instead of placebo we select a \verb{2 x 2} sub-table where
+For relative VE the process is similar to absolute VE, except that instead of placebo we select a \verb{I x 2} sub-table where
 the columns are two vaccines of interest.
 }
 \examples{
 As an example we recommend running the function without passing any parameter to it.
-The default scenario is for three vaccines and three pathogen strains.
+The default scenario is for three vaccines and three pathogen variants.
 
 }
 \references{

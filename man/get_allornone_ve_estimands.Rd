@@ -2,44 +2,44 @@
 % Please edit documentation in R/get_allornone_ve_estimands.R
 \name{get_allornone_ve_estimands}
 \alias{get_allornone_ve_estimands}
-\title{Time-dependency of strain and vaccine-specific efficacy (VE) estimands based on incidence rate ratio, cumulative-incidence ratio, and odds ratio}
+\title{Time-dependency of variant and vaccine-specific efficacy (VE) estimands based on incidence rate ratio, cumulative-incidence ratio, and odds ratio}
 \usage{
 get_allornone_ve_estimands(
-  anticipated_VE_for_each_brand_and_strain = matrix(data = c(0.04, 0.1, 0.03, 0.05,
+  anticipated_VE_for_each_brand_and_variant = matrix(data = c(0.04, 0.1, 0.03, 0.05,
     0.03, 0.07, 0.4, 0.05, 0.18, 0.01, 0.08, 0.04, 0.07, 0.2, 0.08, 0.05, 0.07, 0.01,
     0.02, 0.13, 0.1), nrow = 3, ncol = 7, byrow = T, dimnames = list(paste0("brand",
-    1:3), paste0("strain", c("1", "2", "3", "12", "13", "23", "123")))),
+    1:3), paste0("variant", c("1", "2", "3", "12", "13", "23", "123")))),
   incidence_rate_unvaccinated = c(0.05, 0.1, 0.2),
   study_period = 1
 )
 }
 \arguments{
-\item{anticipated_VE_for_each_brand_and_strain}{a matrix of proportion of subjects immune to certain combination (column) of strains given a certain vaccine (row). Each value must be a real number between 0 and 1 and sum of each row should not exceed 1.}
+\item{anticipated_VE_for_each_brand_and_variant}{a matrix of proportion of subjects immune to certain combination (column) of variants given a certain vaccine (row). Each value must be a real number between 0 and 1 and sum of each row should not exceed 1.}
 
-\item{incidence_rate_unvaccinated}{a vector denoting the incidence rates of each strain in the unvaccinated subjects.}
+\item{incidence_rate_unvaccinated}{a vector denoting the incidence rates of each variant in the unvaccinated subjects.}
 
 \item{study_period}{the study period (epochs) should be numeric value greater than 0.}
 }
 \value{
-A list with three elements, namely \code{absolute_ve}, \code{relative_ve_across_strain_given_vaccine},
-and \code{relative_ve_across_vaccines_given_strain}.
+A list with three elements, namely \code{absolute_ve}, \code{relative_ve_across_variant_given_vaccine},
+and \code{relative_ve_across_vaccines_given_variant}.
 The list element \code{absolute_ve} pertains to the absolute efficacy of the vaccines.
 It contains four elements, namely \code{absolute_ve_true}, \code{absolute_ve_irr},
 \code{absolute_ve_cir}, and \code{absolute_ve_or}. Here \code{absolute_ve_true} is same as the input parameter
-\code{anticipated_VE_for_each_brand_and_strain}, and indicates the true biological efficacy of the vaccine.
+\code{anticipated_VE_for_each_brand_and_variant}, and indicates the true biological efficacy of the vaccine.
 Whereas, the remaining three are the VE estimands based on incidence rate ratio, cumulative-incidence ratio,
 and odds ratio, respectively.
 
-The list element \code{relative_ve_across_strain_given_vaccine} pertains to the relative VE of a vaccine against two different
-strains/variants. It is a matrix with 7 rows and multiple columns. Each column being one of the comparison sets of strains and vaccines.
-Rows 1 and 2 indicate the two strains of interest for comparison and row 3 has the vaccine.
+The list element \code{relative_ve_across_variant_given_vaccine} pertains to the relative VE of a vaccine against two different
+variants/variants. It is a matrix with 7 rows and multiple columns. Each column being one of the comparison sets of variants and vaccines.
+Rows 1 and 2 indicate the two variants of interest for comparison and row 3 has the vaccine.
 The remaining rows show the true relative VE, and the relative VE based on incidence rate ratio, cumulative-incidence ratio,
 and odds ratio, respectively.
 
-The list element \code{relative_ve_across_vaccines_given_strain} pertains to the relative VE of two vaccines against the
-same strains/variants. It is a matrix with 7 rows and multiple columns.
-Each column being one of the comparison sets of strains and vaccines.
-Rows 1 and 2 indicate the two vaccines of interest for comparison and row 3 has the strain.
+The list element \code{relative_ve_across_vaccines_given_variant} pertains to the relative VE of two vaccines against the
+same variants/variants. It is a matrix with 7 rows and multiple columns.
+Each column being one of the comparison sets of variants and vaccines.
+Rows 1 and 2 indicate the two vaccines of interest for comparison and row 3 has the variant.
 The remaining rows show the true relative VE, and the relative VE based on incidence rate ratio, cumulative-incidence ratio,
 and odds ratio, respectively.
 }
@@ -48,28 +48,28 @@ The function \code{get_allornone_ve_estimands} provides the VE estimands based o
 for an all-or-none vaccine given the actual efficacy of the vaccine. The function returns both absolute and relative VE estimands.
 }
 \details{
-To understand the parameter \code{anticipated_VE_for_each_brand_and_strain} and the action of all-or-none vaccines,
-assume that there are only three strains \code{1},\code{2}, and \code{3} circulating. The subjects vaccinated with the vaccine \code{1}
-are represented in row 1 of the matrix \code{anticipated_VE_for_each_brand_and_strain[1, ]}. Specifically,
-\code{anticipated_VE_for_each_brand_and_strain[1, 1]} is the proportion of subjects who become immune to the
-strain \code{1} but not to the other two strains. Among these subjects infections occur with the combined incidence rates
-of the strains \code{2} and \code{3}. \code{anticipated_VE_for_each_brand_and_strain[1, 2]} and \code{anticipated_VE_for_each_brand_and_strain[1, 3]}
-hold similar interpretation. Next, let \code{anticipated_VE_for_each_brand_and_strain[1, 4]}, be the proportion of subjects who become
-immune to both strains \code{1} and \code{2} but not to strain \code{3}. Among these subjects infection with variant \code{3} happens with
-the incidence rate of strain \code{3}. We can define \code{anticipated_VE_for_each_brand_and_strain[1, 5]} and
-\verb{anticipated_VE_for_each_brand_and_strain[1, 6], similarly. Lastly, }anticipated_VE_for_each_brand_and_strain\link{1, 7}\verb{are the proportion of subjects who become immune to all three strains. The remaining proportion of subjects do not become immune to any variant despite vaccination. For them infections happens as in as in the placebo subjects. This proportion is not entered in the matrix}anticipated_VE_for_each_brand_and_strain\verb{because this proportion can be obtained as}1 - rowSums(anticipated_VE_for_each_brand_and_strain)`.
+To understand the parameter \code{anticipated_VE_for_each_brand_and_variant} and the action of all-or-none vaccines,
+assume that there are only three variants \code{1},\code{2}, and \code{3} circulating. The subjects vaccinated with the vaccine \code{1}
+are represented in row 1 of the matrix \code{anticipated_VE_for_each_brand_and_variant[1, ]}. Specifically,
+\code{anticipated_VE_for_each_brand_and_variant[1, 1]} is the proportion of subjects who become immune to the
+variant \code{1} but not to the other two variants. Among these subjects infections occur with the combined incidence rates
+of the variants \code{2} and \code{3}. \code{anticipated_VE_for_each_brand_and_variant[1, 2]} and \code{anticipated_VE_for_each_brand_and_variant[1, 3]}
+hold similar interpretation. Next, let \code{anticipated_VE_for_each_brand_and_variant[1, 4]}, be the proportion of subjects who become
+immune to both variants \code{1} and \code{2} but not to variant \code{3}. Among these subjects infection with variant \code{3} happens with
+the incidence rate of variant \code{3}. We can define \code{anticipated_VE_for_each_brand_and_variant[1, 5]} and
+\verb{anticipated_VE_for_each_brand_and_variant[1, 6], similarly. Lastly, }anticipated_VE_for_each_brand_and_variant\link{1, 7}\verb{are the proportion of subjects who become immune to all three variants. The remaining proportion of subjects do not become immune to any variant despite vaccination. For them infections happens as in as in the placebo subjects. This proportion is not entered in the matrix}anticipated_VE_for_each_brand_and_variant\verb{because this proportion can be obtained as}1 - rowSums(anticipated_VE_for_each_brand_and_variant)`.
 
 Smith et al. (1984) have shown that when a vaccine has an all-or-none action mechanism (Halloran et al., 2010, page 132),
 then VE calculated as \verb{VE = 1 - incidence rate ratio} depends on the length of the study period \code{t}.
 Specifically, when \code{t -> Infinity} then \verb{1 - incidence rate ratio -> 1} and thus it does not reflect the
 biological effect of the vaccine for a given exposure to the pathogen. The aim of this function is to
-extend upon the findings of Smith et al. (1984) for multiple strain/variants and vaccines. And to help
-practitioners understand why certains VE measures may not reflect the biological VE.
+extend upon the findings of Smith et al. (1984) for multiple variant/variants and vaccines. And to help
+practitioners understand why certain VE measures may not reflect the biological VE.
 More details can be found in our related paper.
 }
 \examples{
 As an example we recommend running the function without passing any parameter to it.
-The default scenario is for three vaccines and three pathogen strains.
+The default scenario is for three vaccines and three pathogen variants.
 
 }
 \references{
