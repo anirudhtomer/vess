@@ -16,6 +16,7 @@
 #' @param total_cases a vector of the number of cases in our cohort for which calculations should be done.
 #' @param nsims total number of Monte Carlo simulations conducted.
 #'
+#' @details
 #' In this function efficacy is defined as `VE = 1 - odds ratio`, where 'odds ratio' is
 #' the ratio of odds of being vaccinated with a particular vaccine versus being unvaccinated among cases and the same odds in controls.
 #' When the groups being compared are a particular vaccine versus placebo then we call the VE

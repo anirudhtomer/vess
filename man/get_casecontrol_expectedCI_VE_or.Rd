@@ -42,8 +42,18 @@ get_casecontrol_expectedCI_VE_or(
 
 \item{total_cases}{a vector of the number of cases in our cohort for which calculations should be done.}
 
-\item{nsims}{total number of Monte Carlo simulations conducted.
-
+\item{nsims}{total number of Monte Carlo simulations conducted.}
+}
+\value{
+A data frame consisting of the input parameters, absolute and relative VE combinations,
+and the expected lower and expected upper width of the confidence intervals for each absolute and relative VE combination.
+}
+\description{
+The function \code{get_cohort_expectedCI_VE_or} simulates confidence intervals for variant and vaccine-specific efficacy (VE) for a given sample size.
+The efficacy is defined as \verb{VE = 1 - odds ratio}, and the function returns expected lower and expected upper confidence interval limit
+for both absolute and relative VE.
+}
+\details{
 In this function efficacy is defined as \verb{VE = 1 - odds ratio}, where 'odds ratio' is
 the ratio of odds of being vaccinated with a particular vaccine versus being unvaccinated among cases and the same odds in controls.
 When the groups being compared are a particular vaccine versus placebo then we call the VE
@@ -71,16 +81,7 @@ We repeat this procedure \code{nsims} times, and in each such simulation we obta
 To conduct simulations faster all the calculations are done without using for loops.
 Instead we use a three-dimensional R arrays, with one-dimension for \code{nsims},
 another for the sample size vector \code{total_cases},
-and another for a vector containing the flattened cross table of simulated data on cases and controls.}
-}
-\value{
-A data frame consisting of the input parameters, absolute and relative VE combinations,
-and the expected lower and expected upper width of the confidence intervals for each absolute and relative VE combination.
-}
-\description{
-The function \code{get_cohort_expectedCI_VE_or} simulates confidence intervals for variant and vaccine-specific efficacy (VE) for a given sample size.
-The efficacy is defined as \verb{VE = 1 - odds ratio}, and the function returns expected lower and expected upper confidence interval limit
-for both absolute and relative VE.
+and another for a vector containing the flattened cross table of simulated data on cases and controls.
 }
 \examples{
 As an example we recommend running the function without passing any parameter to it.
