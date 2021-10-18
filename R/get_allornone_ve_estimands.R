@@ -17,7 +17,7 @@
 #' hold similar interpretation. Next, let `anticipated_VE_for_each_brand_and_variant[1, 4]`, be the proportion of subjects who become
 #' immune to both variants `1` and `2` but not to variant `3`. Among these subjects infection with variant `3` happens with
 #' the incidence rate of variant `3`. We can define `anticipated_VE_for_each_brand_and_variant[1, 5]` and
-#' `anticipated_VE_for_each_brand_and_variant[1, 6], similarly. Lastly, `anticipated_VE_for_each_brand_and_variant[1, 7]` are
+#' `anticipated_VE_for_each_brand_and_variant[1, 6]`, similarly. Lastly, `anticipated_VE_for_each_brand_and_variant[1, 7]` are
 #' the proportion of subjects who become immune to all three variants.
 #' The remaining proportion of subjects do not become immune to any variant despite vaccination.
 #' For them infections happens as in as in the placebo subjects. This proportion is not entered in the matrix

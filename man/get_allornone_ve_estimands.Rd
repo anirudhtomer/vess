@@ -57,7 +57,12 @@ of the variants \code{2} and \code{3}. \code{anticipated_VE_for_each_brand_and_v
 hold similar interpretation. Next, let \code{anticipated_VE_for_each_brand_and_variant[1, 4]}, be the proportion of subjects who become
 immune to both variants \code{1} and \code{2} but not to variant \code{3}. Among these subjects infection with variant \code{3} happens with
 the incidence rate of variant \code{3}. We can define \code{anticipated_VE_for_each_brand_and_variant[1, 5]} and
-\verb{anticipated_VE_for_each_brand_and_variant[1, 6], similarly. Lastly, }anticipated_VE_for_each_brand_and_variant\link{1, 7}\verb{are the proportion of subjects who become immune to all three variants. The remaining proportion of subjects do not become immune to any variant despite vaccination. For them infections happens as in as in the placebo subjects. This proportion is not entered in the matrix}anticipated_VE_for_each_brand_and_variant\verb{because this proportion can be obtained as}1 - rowSums(anticipated_VE_for_each_brand_and_variant)`.
+\code{anticipated_VE_for_each_brand_and_variant[1, 6]}, similarly. Lastly, \code{anticipated_VE_for_each_brand_and_variant[1, 7]} are
+the proportion of subjects who become immune to all three variants.
+The remaining proportion of subjects do not become immune to any variant despite vaccination.
+For them infections happens as in as in the placebo subjects. This proportion is not entered in the matrix
+\code{anticipated_VE_for_each_brand_and_variant} because this proportion can be obtained as
+\code{1 - rowSums(anticipated_VE_for_each_brand_and_variant)}.
 
 Smith et al. (1984) have shown that when a vaccine has an all-or-none action mechanism (Halloran et al., 2010, page 132),
 then VE calculated as \verb{VE = 1 - incidence rate ratio} depends on the length of the study period \code{t}.

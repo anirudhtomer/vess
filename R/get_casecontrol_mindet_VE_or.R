@@ -94,7 +94,6 @@ get_casecontrol_mindet_VE_or = function(anticipated_VE_for_each_brand_and_varian
   full_table = cbind(case_control_full_tables$conditional_vector_controls, case_control_full_tables$full_table_cases)
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, FUN = function(comparison_set){
-    browser()
     variant_index = comparison_set[VARIANT] + CONTROL_COL
     vaccine1_index = comparison_set[BRAND1] + UNVACCINATED_ROW
     vaccine2_index = comparison_set[BRAND2] + UNVACCINATED_ROW
