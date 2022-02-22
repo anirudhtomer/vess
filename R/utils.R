@@ -91,7 +91,7 @@ get_variant_comparison_combinations = function(total_vaccine_brands, total_case_
   return(relative_VE_combn)
 }
 
-get_cohort_full_table_cir = function(anticipated_VE_for_each_brand_and_variant, overall_vaccine_coverage,
+get_cohort_full_table_crr = function(anticipated_VE_for_each_brand_and_variant, overall_vaccine_coverage,
                                      overall_attack_rate_in_unvaccinated,
                                      proportion_variants_in_unvaccinated_cases, brand_proportions_in_vaccinated){
   #We are going to create a table with dimensions (row x columns) = (total_case_variants + 1) x (total_vaccine_brands + 1)
@@ -327,15 +327,15 @@ get_ve_from_components = function(components){
 
   absolute_ve_true = 1 - theta_im
   absolute_ve_irr = 1 - (pr_c_i_v_m / pr_c_i_v_0) * (e_y_v_0 / e_y_v_m)
-  absolute_ve_cir = 1 - (pr_c_i_v_m / pr_c_i_v_0)
+  absolute_ve_crr = 1 - (pr_c_i_v_m / pr_c_i_v_0)
   absolute_ve_or = 1 - (pr_c_i_v_m / pr_c_i_v_0) * (pr_c_0_v_0/pr_c_0_v_m)
 
   variant_comparisons = combn(total_variants, 2)
   variant_comparisons = cbind(variant_comparisons, variant_comparisons[c(2,1),])
   variant_comparisons = rbind(variant_comparisons[, rep(1:ncol(variant_comparisons), each=total_brands), drop=F],
                               rep(1:total_brands, ncol(variant_comparisons)), NA, NA, NA, NA)
-  rownames(variant_comparisons) = c("variant1", "variant2", "vaccine", "relative_ve_true", "relative_ve_irr", "relative_ve_cir", "relative_ve_or")
-  variant_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_cir", "relative_ve_or"),] = apply(X = variant_comparisons, MARGIN = 2, FUN = function(comparison){
+  rownames(variant_comparisons) = c("variant1", "variant2", "vaccine", "relative_ve_true", "relative_ve_irr", "relative_ve_crr", "relative_ve_or")
+  variant_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_crr", "relative_ve_or"),] = apply(X = variant_comparisons, MARGIN = 2, FUN = function(comparison){
     variant1 = comparison['variant1']
     variant2 = comparison['variant2']
     vaccine = comparison['vaccine']
@@ -352,9 +352,9 @@ get_ve_from_components = function(components){
   vaccine_comparisons = cbind(vaccine_comparisons, vaccine_comparisons[c(2,1),])
   vaccine_comparisons = rbind(vaccine_comparisons[, rep(1:ncol(vaccine_comparisons), each=total_variants), drop=F],
                               rep(1:total_variants, ncol(vaccine_comparisons)), NA, NA, NA, NA)
-  rownames(vaccine_comparisons) = c("vaccine1", "vaccine2", "variant", "relative_ve_true", "relative_ve_irr", "relative_ve_cir", "relative_ve_or")
+  rownames(vaccine_comparisons) = c("vaccine1", "vaccine2", "variant", "relative_ve_true", "relative_ve_irr", "relative_ve_crr", "relative_ve_or")
 
-  vaccine_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_cir", "relative_ve_or"),] = apply(X = vaccine_comparisons, MARGIN = 2, FUN = function(comparison){
+  vaccine_comparisons[c("relative_ve_true","relative_ve_irr", "relative_ve_crr", "relative_ve_or"),] = apply(X = vaccine_comparisons, MARGIN = 2, FUN = function(comparison){
     vaccine1 = comparison['vaccine1']
     vaccine2 = comparison['vaccine2']
     variant = comparison['variant']
@@ -371,7 +371,7 @@ get_ve_from_components = function(components){
 
   return(list(absolute_ve = list(absolute_ve_true=absolute_ve_true,
                                  absolute_ve_irr=absolute_ve_irr,
-                                 absolute_ve_cir=absolute_ve_cir,
+                                 absolute_ve_crr=absolute_ve_crr,
                                  absolute_ve_or=absolute_ve_or),
               relative_ve_across_variant_given_vaccine = variant_comparisons,
               relative_ve_across_vaccines_given_variant = vaccine_comparisons))

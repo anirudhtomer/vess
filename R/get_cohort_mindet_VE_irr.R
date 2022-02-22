@@ -28,23 +28,23 @@
 #' permutations of relative VE of two vaccines against the same variant.
 #'
 #' We first transform the user inputs for `I` variants and `M` vaccines into a `(I + 1) x (M + 1)` cross table of
-#' cumulative-incidences of being a case or a control over the study period. The overall sum of all cumulative-incidences,
-#' i.e., all cells, of this table is 1. The first row of our cumulative-incidence table contain cumulative-incidence of being a control.
+#' cumulative-risks of being a case or a control over the study period. The overall sum of all cumulative-risks,
+#' i.e., all cells, of this table is 1. The first row of our cumulative-risk table contain cumulative-risk of being a control.
 #' The first column corresponds to subjects who are unvaccinated.
-#' Thus, the cell `{1,1}` contains the probability (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
-#' The remaining `Ì` rows correspond to subjects who are cases of a particular variant/variant of the pathogen,
+#' Thus, the cell `{1,1}` contains the probability (cumulative-risk) that over the study period a subject will be a control and unvaccinated.
+#' The remaining `I` rows correspond to subjects who are cases of a particular variant/variant of the pathogen,
 #' and the remaining `M` columns correspond to subjects who are vaccinated with a particular vaccine. In the
 #' person-time based estimator of incidence rates the number of cases only constitute the numerator.
 #' The denominator is person-time contributed by subjects vaccinated with a particular vaccine (or placebo).
-#' Hence, in addition to the table of cumulative-incidences, using the user input we also
+#' Hence, in addition to the table of cumulative-risks, using the user input we also
 #' obtain a `I x (M + 1)` table of incidence rates.
 #'
 #' In general, while calculating minimum detectable VE it is not necessary to ask for `anticipated_VE_for_each_brand_and_variant`.
 #' The reason we need it in the multiple variant and multiple vaccine scenario is explained next.
 #'
 #' After we obtain the cumulative incidence table our next step is to calculate the minimum detectable VE for each absolute and relative VE combination.
-#' For absolute VE we extract a `I x 2` sub-table of cumulative-incidences from the larger `(I + 1) x (M + 1)` cross table of
-#' cumulative-incidences. The two columns are for the vaccine of interest and placebo. The effective sample size for this sub-table and the absolute VE is then
+#' For absolute VE we extract a `I x 2` sub-table of cumulative-risks from the larger `(I + 1) x (M + 1)` cross table of
+#' cumulative-risks. The two columns are for the vaccine of interest and placebo. The effective sample size for this sub-table and the absolute VE is then
 #' `total_subjects * sub_table_probability_sum * (1 - prob_missing_data) * (1 - confounder_adjustment_Rsquared)`.
 #' Here `sub_table_probability_sum` is the sum of the cells of the sub_table.
 #' This sum corresponds to the percentage of the `total_subjects` that can be used for a specific absolute VE calculation.

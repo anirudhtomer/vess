@@ -1,7 +1,7 @@
-#' Minimum detectable variant and vaccine-specific efficacy based on cumulative-incidence ratio.
+#' Minimum detectable variant and vaccine-specific efficacy based on cumulative-risk ratio.
 #' @description
-#' The function `get_cohort_mindet_VE_cir` calculates the minimum detectable variant and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
-#' The efficacy is defined as `VE = 1 - cumulative-incidence ratio`, and the function returns
+#' The function `get_cohort_mindet_VE_crr` calculates the minimum detectable variant and vaccine-specific efficacy (VE) for a given sample size, power, and type-I error rate.
+#' The efficacy is defined as `VE = 1 - cumulative-risk ratio`, and the function returns
 #' both absolute and relative minimum detectable VE. The NULL hypothesis is that `VE = 0` and
 #' the alternate hypothesis in that `VE is not equal to 0`.
 #'
@@ -18,8 +18,8 @@
 #' @param total_subjects a vector of study cohort size for which calculations should be done.
 #'
 #' @details
-#' In this function efficacy is defined as `VE = 1 - cumulative-incidence ratio`, where 'cumulative-incidence ratio' is
-#' the ratio of cumulative-incidence of being a case of a particular variant/variant among the groups being compared.
+#' In this function efficacy is defined as `VE = 1 - cumulative-risk ratio`, where 'cumulative-risk ratio' is
+#' the ratio of cumulative-risk of being a case of a particular variant/variant among the groups being compared.
 #' When the groups being compared are a particular vaccine versus placebo then we call the VE
 #' as the absolute VE of the vaccine. For `M` vaccines there are `M` absolute VE, one each for the `M` vaccines.
 #' When the groups being compared are a particular vaccine versus another vaccine then we call the VE
@@ -27,25 +27,25 @@
 #' permutations of relative VE of two vaccines against the same variant.
 #'
 #' We first transform the user inputs for `I` variants and `M` vaccines into a `(I + 1) x (M + 1)` cross table of
-#' cumulative-incidences of being a case or a control over the study period. The overall sum of all cumulative-incidences,
-#' i.e., all cells, of this table is 1. The first row of our cumulative-incidence table contain cumulative-incidence of being a control.
+#' cumulative-risks of being a case or a control over the study period. The overall sum of all cumulative-risks,
+#' i.e., all cells, of this table is 1. The first row of our cumulative-risk table contain cumulative-risk of being a control.
 #' The first column corresponds to subjects who are unvaccinated.
-#' Thus, the cell `{1,1}` contains the probability (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
+#' Thus, the cell `{1,1}` contains the probability (cumulative-risk) that over the study period a subject will be a control and unvaccinated.
 #' The remaining `Ì` rows correspond to subjects who are cases of a particular variant/variant of the pathogen,
 #' and the remaining `M` columns correspond to subjects who are vaccinated with a particular vaccine.
 #'
 #' In general, while calculating minimum detectable VE it is not necessary to ask for `anticipated_VE_for_each_brand_and_variant`.
 #' The reason we need it in the multiple variant and multiple vaccine scenario is explained next.
 #'
-#' After we obtain the cumulative incidence table our next step is to calculate the minimum detectable VE for each absolute and relative VE combination.
-#' For absolute VE we extract a `I x 2` sub-table of cumulative-incidence from the larger `(I + 1) x (M + 1)` cross table of
-#' cumulative-incidences. The two columns are for the vaccine of interest and placebo.
+#' After we obtain the cumulative risk table our next step is to calculate the minimum detectable VE for each absolute and relative VE combination.
+#' For absolute VE we extract a `I x 2` sub-table of cumulative-risk from the larger `(I + 1) x (M + 1)` cross table of
+#' cumulative-risks. The two columns are for the vaccine of interest and placebo.
 #' The effective sample size for this sub-table and the absolute VE is then
 #' `total_subjects * sub_table_probability_sum * (1 - prob_missing_data) * (1 - confounder_adjustment_Rsquared)`.
 #' Here `sub_table_probability_sum` is the sum of the cells of the sub_table.
 #' This sum corresponds to the percentage of the `total_subjects` that can be used for a specific absolute VE calculation.
 #' The effective overall coverage in this sub-table is the rescaled probability of being vaccinated in the `I x 2` sub-table.
-#' The effective overall attack rate in unvaccinated in this sub-table is the cumulative-incidence of being a case of strain 
+#' The effective overall attack rate in unvaccinated in this sub-table is the cumulative-risk of being a case of strain
 #' of interest among the unvaccinated subjects in the `I x 2` sub-table.
 #' We then simply pass these adjusted parameters to the function `epi.sscohortc` of the R package `epiR` to obtain the minimum detectable absolute VE.
 #' For relative VE the process is similar to absolute VE, except that instead of placebo we select a `I x 2` sub-table where
@@ -63,7 +63,7 @@
 #' @importFrom epiR epi.sscohortc
 #' @importFrom utils combn
 #' @export
-get_cohort_mindet_VE_cir = function(anticipated_VE_for_each_brand_and_variant=
+get_cohort_mindet_VE_crr = function(anticipated_VE_for_each_brand_and_variant=
                                       matrix(data=c(0.8, 0.5, 0.3, 0.3, 0.5, 0.8, 0.9, 0.5, 1), nrow = 3, ncol = 3, byrow = F,
                                              dimnames = list(paste0('brand', 1:3), paste0('variant', 1:3))),
                                     brand_proportions_in_vaccinated =
@@ -85,7 +85,7 @@ get_cohort_mindet_VE_cir = function(anticipated_VE_for_each_brand_and_variant=
 
   relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_variants, calculate_relative_VE)
 
-  cir_tables = get_cohort_full_table_cir(anticipated_VE_for_each_brand_and_variant, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+  crr_tables = get_cohort_full_table_crr(anticipated_VE_for_each_brand_and_variant, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
                                          proportion_variants_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
   total_total_subject_settings = length(total_subjects)
@@ -95,32 +95,32 @@ get_cohort_mindet_VE_cir = function(anticipated_VE_for_each_brand_and_variant=
   UNVACCINATED_COL = 1
 
   mindet_VE = t(apply(relative_VE_combn, MARGIN = 2, function(comparison_set){
-    sub_full_table = cir_tables$full_table[, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
+    sub_full_table = crr_tables$full_table[, c(comparison_set[BRAND1], comparison_set[BRAND2]) + UNVACCINATED_COL]
 
     vaccine1_coverage = sum(sub_full_table[,1])
     group_coverage = sum(sub_full_table)
     subpopulation_coverage = vaccine1_coverage / group_coverage
 
     if(comparison_set[BRAND2] == 0){
-      cir_index = 1
+      crr_index = 1
     }else{
       anticipated_VEs = anticipated_VE_for_each_brand_and_variant[comparison_set[c(BRAND1, BRAND2)],
                                                                   comparison_set[VARIANT]]
-      #irr index 1 is lower limit of incidence rate ratio and to be chosen when VE is 0 to 100%
-      #irr index 2 is upper limit of incidence rate ratio and to be chosen when VE is between -100% and 0%
-      cir_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
+      #crr index 1 is lower limit of crr and to be chosen when VE is 0 to 100%
+      #crr index 2 is upper limit of crr and to be chosen when VE is between -100% and 0%
+      crr_index = ifelse(anticipated_VEs[2] > anticipated_VEs[1], 2, 1)
     }
 
     #the 'n' parameter need not be integer for this API.
     sapply(missing_data_adjusted_total_subjects * group_coverage * (1-confounder_adjustment_Rsquared),
            function(n){
              ret = try(1 - epi.sscohortc(irexp1 = NA,
-                                         irexp0 = cir_tables$conditional_table[comparison_set[VARIANT] + CONTROL_ROW,
+                                         irexp0 = crr_tables$conditional_table[comparison_set[VARIANT] + CONTROL_ROW,
                                                                                comparison_set[BRAND2] + UNVACCINATED_COL],
                                          n = n,
                                          power = power,
                                          r = subpopulation_coverage/(1-subpopulation_coverage),
-                                         design = 1, sided.test = 2, conf.level = 1-alpha)$irr[cir_index], silent = T)
+                                         design = 1, sided.test = 2, conf.level = 1-alpha)$irr[crr_index], silent = T)
              if(inherits(ret, "try-error")){
                return(NA)
              }else{

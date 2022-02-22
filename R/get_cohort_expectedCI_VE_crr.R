@@ -1,7 +1,7 @@
-#' Expected lower and expected upper limit of the confidence intervals of variant and vaccine-specific efficacy based on cumulative-incidence ratio.
+#' Expected lower and expected upper limit of the confidence intervals of variant and vaccine-specific efficacy based on cumulative-risk ratio.
 #' @description
-#' The function `get_cohort_expectedCI_VE_cir` simulates confindence intervals for variant and vaccine-specific efficacy (VE) for a given sample size.
-#' The efficacy is defined as `VE = 1 - cumulative-incidence ratio`, and the function returns expected lower and expected upper confidence interval limit
+#' The function `get_cohort_expectedCI_VE_crr` simulates confindence intervals for variant and vaccine-specific efficacy (VE) for a given sample size.
+#' The efficacy is defined as `VE = 1 - cumulative-risk ratio`, and the function returns expected lower and expected upper confidence interval limit
 #' for both absolute and relative VE.
 #'
 #' @param anticipated_VE_for_each_brand_and_variant a matrix of vaccine efficacy of each vaccine (row) against each variant (column). Each value must be a real number between 0 and 1.
@@ -17,8 +17,8 @@
 #' @param nsims total number of Monte Carlo simulations conducted.
 #'
 #' @details
-#' In this function efficacy is defined as `VE = 1 - cumulative-incidence ratio`, where 'cumulative-incidence ratio' is
-#' the ratio of cumulative-incidence of being a case of a particular variant/variant among the groups being compared.
+#' In this function efficacy is defined as `VE = 1 - cumulative-risk ratio`, where 'cumulative-risk ratio' is
+#' the ratio of cumulative-risk of being a case of a particular variant/variant among the groups being compared.
 #' When the groups being compared are a particular vaccine versus placebo then we call the VE
 #' as the absolute VE of the vaccine. For `M` vaccines there are `M` absolute VE, one each for the `M` vaccines.
 #' When the groups being compared are a particular vaccine versus another vaccine then we call the VE
@@ -26,19 +26,19 @@
 #' permutations of relative VE of two vaccines against the same variant.
 #'
 #' We first transform the user inputs for `I` variants and `M` vaccines into a `(I + 1) x (M + 1)` cross table of
-#' cumulative-incidences of being a case or a control over the study period. The overall sum of all cumulative-incidences,
-#' i.e., all cells, of this table is 1. The first row of our cumulative-incidence table contain cumulative-incidence of being a control.
+#' cumulative-risks of being a case or a control over the study period. The overall sum of all cumulative-risks,
+#' i.e., all cells, of this table is 1. The first row of our cumulative-risk table contain cumulative-risk of being a control.
 #' The first column corresponds to subjects who are unvaccinated.
-#' Thus, the cell `{1,1}` contains the probability (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
+#' Thus, the cell `{1,1}` contains the probability (cumulative-risk) that over the study period a subject will be a control and unvaccinated.
 #' The remaining `Ì` rows correspond to subjects who are cases of a particular variant/variant of the pathogen,
 #' and the remaining `M` columns correspond to subjects who are vaccinated with a particular vaccine.
 #'
 #' The next step is to simulate the data. To speed up our computations we sample an `(I + 1) x (M + 1)`
-#' cross table of data from a multinomial distribution with probabilities taken from our cumulative-incidence table.
+#' cross table of data from a multinomial distribution with probabilities taken from our cumulative-risk table.
 #' The total subjects sampled in the cross table are are `total_subjects * (1 - prob_missing_data)`.
-#' We then estimate the absolute and relative VE of each vaccine using the cumulative-incidences based on the sampled data.
+#' We then estimate the absolute and relative VE of each vaccine using the cumulative-risks based on the sampled data.
 #' The confidence intervals with widths `[100*alpha/2, 100*(1 - alpha/2)]%` are obtained using normal approximation
-#' to the distribution of log of cumulative-incidence ratio (Morris and Gardner, 1988).
+#' to the distribution of log of cumulative-risk ratio (Morris and Gardner, 1988).
 #' To adjust for confounders, the standard-error used in the confidence interval is rescaled to `SE/(1 - confounder_adjustment_Rsquared)` (Hsieh and Lavori, 2000)
 #' We repeat this procedure `nsims` times, and in each such simulation we obtain `nsims` confidence intervals.
 #'
@@ -58,7 +58,7 @@
 #' 2. Morris, J. A., & Gardner, M. J. (1988). Statistics in medicine: Calculating confidence intervals for relative risks (odds ratios) and standardised ratios and rates. British medical journal (Clinical research ed.), 296(6632), 1313.
 #' @importFrom utils combn
 #' @export
-get_cohort_expectedCI_VE_cir = function(anticipated_VE_for_each_brand_and_variant=
+get_cohort_expectedCI_VE_crr = function(anticipated_VE_for_each_brand_and_variant=
                                           matrix(data=c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1), nrow = 3, ncol = 3, byrow = T,
                                                  dimnames = list(paste0('brand', 1:3), paste0('variant', 1:3))),
                                         brand_proportions_in_vaccinated =
@@ -80,7 +80,7 @@ get_cohort_expectedCI_VE_cir = function(anticipated_VE_for_each_brand_and_varian
 
   relative_VE_combn = get_vaccine_comparison_combinations(total_vaccine_brands, total_case_variants, calculate_relative_VE)
 
-  prob_tables = get_cohort_full_table_cir(anticipated_VE_for_each_brand_and_variant, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
+  prob_tables = get_cohort_full_table_crr(anticipated_VE_for_each_brand_and_variant, overall_vaccine_coverage, overall_attack_rate_in_unvaccinated,
                                           proportion_variants_in_unvaccinated_cases, brand_proportions_in_vaccinated)
 
   flat_full_table = c(prob_tables$full_table)

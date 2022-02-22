@@ -1,6 +1,6 @@
-#' Time-dependency of variant and vaccine-specific efficacy (VE) estimands based on incidence rate ratio, cumulative-incidence ratio, and odds ratio
+#' Time-dependency of variant and vaccine-specific efficacy (VE) estimands based on incidence rate ratio, cumulative-risk ratio, and odds ratio
 #' @description
-#' The function `get_leaky_ve_estimands` provides the VE estimands based on incidence rate ratio, cumulative-incidence ratio, and odds ratio
+#' The function `get_leaky_ve_estimands` provides the VE estimands based on incidence rate ratio, cumulative-risk ratio, and odds ratio
 #' for a leaky vaccine given the actual efficacy of the vaccine. The function returns both absolute and relative VE estimands.
 #'
 #' @param anticipated_VE_for_each_brand_and_variant a matrix of vaccine efficacy of each vaccine (row) against each variant (column). Each value must be a real number between 0 and 1.
@@ -13,8 +13,8 @@
 #'  is to be entered in the matrix anticipated_VE_for_each_brand_and_variant.
 #'
 #' Smith et al. (1984) have shown that when a vaccine has a leaky action mechanism (Halloran et al., 2010, page 132),
-#' then VE calculated as `VE = 1 - cumulative-incidence ratio` depends on the length of the study period `t`.
-#' Specifically, when `t -> Infinity` then `1 - cumulative-incidence ratio -> 0` and thus it does not reflect the
+#' then VE calculated as `VE = 1 - cumulative-risk ratio` depends on the length of the study period `t`.
+#' Specifically, when `t -> Infinity` then `1 - cumulative-risk ratio -> 0` and thus it does not reflect the
 #' biological effect of the vaccine for a given exposure to the pathogen. The aim of this function is to
 #' extend upon the findings of Smith et al. (1984) for multiple variant/variants and vaccines. And to help
 #' practitioners understand why certains VE measures may not reflect the biological VE.
@@ -25,22 +25,22 @@
 
 #' The list element `absolute_ve` pertains to the absolute efficacy of the vaccines.
 #' It contains four elements, namely `absolute_ve_true`, `absolute_ve_irr`,
-#' `absolute_ve_cir`, and `absolute_ve_or`. Here `absolute_ve_true` is same as the input parameter
+#' `absolute_ve_crr`, and `absolute_ve_or`. Here `absolute_ve_true` is same as the input parameter
 #' `anticipated_VE_for_each_brand_and_variant`, and indicates the true biological efficacy of the vaccine.
-#' Whereas, the remaining three are the VE estimands based on incidence rate ratio, cumulative-incidence ratio,
+#' Whereas, the remaining three are the VE estimands based on incidence rate ratio, cumulative-risk ratio,
 #' and odds ratio, respectively.
 #'
 #' The list element `relative_ve_across_variant_given_vaccine` pertains to the relative VE of a vaccine against two different
 #' variants/variants. It is a matrix with 7 rows and multiple columns. Each column being one of the comparison sets of variants and vaccines.
 #' Rows 1 and 2 indicate the two variants of interest for comparison and row 3 has the vaccine.
-#' The remaining rows show the true relative VE, and the relative VE based on incidence rate ratio, cumulative-incidence ratio,
+#' The remaining rows show the true relative VE, and the relative VE based on incidence rate ratio, cumulative-risk ratio,
 #' and odds ratio, respectively.
 #'
 #' The list element `relative_ve_across_vaccines_given_variant` pertains to the relative VE of two vaccines against the
 #' same variants/variants. It is a matrix with 7 rows and multiple columns.
 #' Each column being one of the comparison sets of variants and vaccines.
 #' Rows 1 and 2 indicate the two vaccines of interest for comparison and row 3 has the variant.
-#' The remaining rows show the true relative VE, and the relative VE based on incidence rate ratio, cumulative-incidence ratio,
+#' The remaining rows show the true relative VE, and the relative VE based on incidence rate ratio, cumulative-risk ratio,
 #' and odds ratio, respectively.
 
 #'
