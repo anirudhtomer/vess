@@ -64,19 +64,19 @@ as the relative VE of the vaccines, for a particular variant. For \code{M} vacci
 permutations of relative VE of two vaccines against the same variant.
 
 We first transform the user inputs for \code{I} variants and \code{M} vaccines into a \verb{(I + 1) x (M + 1)} cross table of
-cumulative-incidences of being a case or a control over the study period. The overall sum of all cumulative-incidences,
-i.e., all cells, of this table is 1. The first row of our cumulative-incidence table contain cumulative-incidence of being a control.
+cumulative-risks of being a case or a control over the study period. The overall sum of all cumulative-risks,
+i.e., all cells, of this table is 1. The first row of our cumulative-risk table contain cumulative-risk of being a control.
 The first column corresponds to subjects who are unvaccinated.
-Thus, the cell \verb{\{1,1\}} contains the probability (cumulative-incidence) that over the study period a subject will be a control and unvaccinated.
+Thus, the cell \verb{\{1,1\}} contains the probability (cumulative-risk) that over the study period a subject will be a control and unvaccinated.
 The remaining \code{Ì} rows correspond to subjects who are cases of a particular variant/variant of the pathogen,
 and the remaining \code{M} columns correspond to subjects who are vaccinated with a particular vaccine.
 The next step is to simulate the data. To speed up our computations we sample an \verb{(I + 1) x (M + 1)}
-cross table of data from a multinomial distribution with probabilities taken from our cumulative-incidence table.
+cross table of data from a multinomial distribution with probabilities taken from our cumulative-risk table.
 The total subjects sampled in the cross table are are \code{total_subjects * (1 - prob_missing_data)}.
 
 In the person-time based estimator of incidence rates the number of cases only constitute the numerator.
 The denominator is person-time contributed by subjects vaccinated with a particular vaccine (or placebo).
-Hence, in addition to the table of cumulative-incidences, using the user input we also obtain a \verb{I x (M + 1)} table of incidence rates.
+Hence, in addition to the table of cumulative-risks, using the user input we also obtain a \verb{I x (M + 1)} table of incidence rates.
 We use this table to calculate the person-time contribution of subjects over \code{study_period}.
 In this table each cell contains the incidence rate of being a case of a particular variant given their vaccination status.
 The naive method to calculate the overall person-time contribution of subjects vaccinated with a particular vaccine is to
